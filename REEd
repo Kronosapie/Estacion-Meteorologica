@@ -29,8 +29,8 @@
   </div>
 
   <script>
-    const channelID = "TU_CANAL_ID"; // <--- CAMBIÁ ESTO
-    const readAPIKey = ""; // Dejalo vacío si tu canal es público
+    const channelID = "2991138"; // <--- CAMBIÁ ESTO
+    const readAPIKey = "CQCKW0T4ORH6UR3H"; // Dejalo vacío si tu canal es público
 
     async function obtenerDatos(field) {
       const url = `https://api.thingspeak.com/channels/${channelID}/fields/${field}.json?results=20${readAPIKey ? '&api_key=' + readAPIKey : ''}`;
