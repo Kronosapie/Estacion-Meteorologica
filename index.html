@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estación Meteorológica</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .grafico {
+      max-width: 700px;
+      margin: 30px auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Estación Meteorológica</h1>
+  <div class="grafico">
+    <canvas id="graficoTemperatura"></canvas>
+  </div>
+
+  <script>
+    const channelID = "2991138";
+    const readAPIKey = "CQCKW0T4ORH6UR3H"; // Tu READ API Key
+
+    async function obtenerDatos(field) {
+      const url = `https://api.thingspeak.com/channels/${channelID}/fields/${field}.json?api_key=${readAPIKey}&results=20`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const labels = data.feeds.map(f => f.created_at.substring(11, 19));
+      const valores = data.feeds.map(f => parseFloat(f[`field${field}`]));
+      return { labels, valores };
+    }
+
+    async function cargarGrafico() {
+      const { labels, valores } = await obtenerDatos(1); // Field 1 = temperatura
+
+      new Chart(document.getElementById("graficoTemperatura"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Temperatura (°C)",
+            data: valores,
+            borderColor: "red",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: false }
+          }
+        }
+      });
+    }
+
+    cargarGrafico();
+  </script>
+</body>
+</html>
