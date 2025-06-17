@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Estación Meteorológica</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .grafico {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>Estación Meteorológica</h1>
+
+  <div class="grafico">
+    <h2>Temperatura (°C)</h2>
+    <canvas id="graficoTemp"></canvas>
+  </div>
+
+  <div class="grafico">
+    <h2>Presión (hPa)</h2>
+    <canvas id="graficoPresion"></canvas>
+  </div>
+
+  <div class="grafico">
+    <h2>Humedad (%)</h2>
+    <canvas id="graficoHumedad"></canvas>
+  </div>
+
+  <div class="grafico">
+    <h2>Altitud (m)</h2>
+    <canvas id="graficoAltitud"></canvas>
+  </div>
+
+  <script>
+    const channelID = "2991138"; // <- tu canal
+    const readAPIKey = "CQCKW0T4ORH6UR3H"; // <- tu Read API Key
+
+    async function obtenerDatos(field) {
+      const url = `https://api.thingspeak.com/channels/${channelID}/fields/${field}.json?api_key=${readAPIKey}&results=20`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const labels = data.feeds.map(f => f.created_at.substring(11, 19));
+      const valores = data.feeds.map(f => parseFloat(f[`field${field}`]));
+      return { labels, valores };
+    }
+
+    async function cargarGraficos() {
+      const campos = [
+        { id: "graficoTemp", field: 1, label: "Temperatura (°C)", color: "red" },
+        { id: "graficoPresion", field: 2, label: "Presión (hPa)", color: "blue" },
+        { id: "graficoHumedad", field: 3, label: "Humedad (%)", color: "green" },
+        { id: "graficoAltitud", field: 4, label: "Altitud (m)", color: "orange" },
+      ];
+
+      for (let c of campos) {
+        const { labels, valores } = await obtenerDatos(c.field);
+        new Chart(document.getElementById(c.id), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: c.label,
+              data: valores,
+              borderColor: c.color,
+              backgroundColor: c.color + "44",
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+      }
+    }
+
+    cargarGraficos();
+  </script>
+</body>
+</html>
