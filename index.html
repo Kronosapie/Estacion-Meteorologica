@@ -55,102 +55,129 @@
   </div>
 
   <script>
-    const canalID = 2991138;
-    const apiKey = "CQCKW0T4ORH6UR3H";
+  const canalID = 2991138;
+  const apiKey = "CQCKW0T4ORH6UR3H";
 
-    const campos = [
-      { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp" },
-      { id: 2, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum" },
-      { id: 3, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres" },
-      { id: 4, nombre: "Altitud (m)", color: "#ff8800", canvasId: "graficoAlt" }
-    ];
+  const campos = [
+    { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp" },
+    { id: 2, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum" },
+    { id: 3, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres" },
+    { id: 4, nombre: "Altitud (m)", color: "#ff8800", canvasId: "graficoAlt" }
+  ];
 
-    campos.forEach(campo => {
-      const url = `https://api.thingspeak.com/channels/${canalID}/fields/${campo.id}.json?api_key=${apiKey}&results=60`;
+  campos.forEach(campo => {
+    const url = `https://api.thingspeak.com/channels/${canalID}/fields/${campo.id}.json?api_key=${apiKey}&results=60`;
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          const feeds = data.feeds;
-          const labels = feeds.map(e => {
-            const hora = new Date(e.created_at);
-            return hora.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
-          });
-
-          const valores = feeds.map(e => parseFloat(e[`field${campo.id}`]));
-
-        // Parte especial para comparar temperatura con OpenWeather
-if (campo.id === 1) {
-  const lat = -34.61;
-  const lon = -58.38;
-  const apiKeyOW = "9ee5d7e13cf00cdb7b2696791348f6af";
-
-  fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKeyOW}`)
-    .then(res => res.json())
-    .then(owData => {
-      const tempOW = owData.main.temp;
-      const tempOWArray = new Array(valores.length).fill(tempOW); // Array plano
-
-      new Chart(document.getElementById(campo.canvasId), {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: "Mi estación",
-              data: valores,
-              fill: true,
-              borderColor: "#ff5252",
-              backgroundColor: "#ff525233",
-              tension: 0.3,
-              pointRadius: 2
-            },
-            {
-              label: "OpenWeather",
-              data: tempOWArray,
-              fill: false,
-              borderColor: "#3399ff",
-              backgroundColor: "#3399ff33",
-              borderDash: [5, 5],
-              tension: 0.1,
-              pointRadius: 0
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true },
-            title: {
-              display: true,
-              text: "Temperatura (Estación vs OpenWeather)"
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: {
-                display: true,
-                text: "Temperatura °C"
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: "Hora"
-              }
-            }
-          }
-        }
-      });
-    });
-}
-
-        })
-        .catch(err => {
-          console.error(`Error cargando campo ${campo.id}:`, err);
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const feeds = data.feeds;
+        const labels = feeds.map(e => {
+          const hora = new Date(e.created_at);
+          return hora.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
         });
-    });
+
+        const valores = feeds.map(e => parseFloat(e[`field${campo.id}`]));
+
+        // Si es el gráfico de temperatura, agregamos comparación con OpenWeather
+        if (campo.id === 1) {
+          const lat = -34.61;
+          const lon = -58.38;
+          const apiKeyOW = "9ee5d7e13cf00cdb7b2696791348f6af";
+
+          fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKeyOW}`)
+            .then(res => res.json())
+            .then(owData => {
+              const tempOW = owData.main.temp;
+              const tempOWArray = new Array(valores.length).fill(tempOW);
+
+              new Chart(document.getElementById(campo.canvasId), {
+                type: "line",
+                data: {
+                  labels: labels,
+                  datasets: [
+                    {
+                      label: "Mi estación",
+                      data: valores,
+                      fill: true,
+                      borderColor: "#ff5252",
+                      backgroundColor: "#ff525233",
+                      tension: 0.3,
+                      pointRadius: 2
+                    },
+                    {
+                      label: "OpenWeather",
+                      data: tempOWArray,
+                      fill: false,
+                      borderColor: "#3399ff",
+                      backgroundColor: "#3399ff33",
+                      borderDash: [5, 5],
+                      tension: 0.1,
+                      pointRadius: 0
+                    }
+                  ]
+                },
+                options: {
+                  responsive: true,
+                  plugins: {
+                    legend: { display: true },
+                    title: {
+                      display: true,
+                      text: "Temperatura (Estación vs OpenWeather)"
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: false,
+                      title: { display: true, text: "Temperatura °C" }
+                    },
+                    x: {
+                      title: { display: true, text: "Hora" }
+                    }
+                  }
+                }
+              });
+            });
+
+        } else {
+          // Gráfico normal (sin comparación)
+          new Chart(document.getElementById(campo.canvasId), {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [{
+                label: campo.nombre,
+                data: valores,
+                fill: true,
+                borderColor: campo.color,
+                backgroundColor: campo.color + "33",
+                tension: 0.3,
+                pointRadius: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: true },
+                title: { display: false }
+              },
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  title: { display: true, text: campo.nombre }
+                },
+                x: {
+                  title: { display: true, text: "Hora" }
+                }
+              }
+            }
+          });
+        }
+      })
+      .catch(err => {
+        console.error(`Error cargando campo ${campo.id}:`, err);
+      });
+  });
   </script>
 
 </body>
