@@ -3,59 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Estación Meteorológica - Chart.js</title>
+  <title>Estación Meteorológica</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: system-ui, sans-serif;
-      background: #f7f9fc;
-      color: #333;
       margin: 0;
-      padding: 0;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(to bottom, #e0f7fa, #f1f8ff);
+      color: #333;
     }
 
     header {
-      text-align: center;
-      padding: 1.5rem 1rem;
-      background: #00aaff;
+      background: #00bcd4;
       color: white;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
     main {
-      padding: 1rem;
       max-width: 1000px;
       margin: auto;
+      padding: 1rem;
     }
 
     .grafico-container {
-      background: #fff;
-      border-radius: 12px;
-      margin: 1.5rem auto;
-      padding: 1rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+      margin: 2rem auto;
     }
 
     h2 {
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #00bcd4;
       text-align: center;
     }
 
     canvas {
       width: 100% !important;
+      max-height: 340px;
       height: auto !important;
-      max-height: 320px;
     }
 
     @media (max-width: 600px) {
-      header {
-        font-size: 1.2rem;
+      header h1 {
+        font-size: 1.3rem;
       }
+
       h2 {
         font-size: 1rem;
       }
+
       .grafico-container {
-        padding: 0.8rem;
+        padding: 1rem;
+        margin: 1.5rem auto;
       }
     }
   </style>
@@ -165,9 +169,16 @@
                       beginAtZero: false,
                       title: { display: true, text: "Temperatura °C" }
                     },
-                    x: {
-                      title: { display: true, text: "Hora" }
-                    }
+                   x: {
+                        title: { display: true, text: "Hora" },
+                        ticks: {
+                          maxTicksLimit: 12,
+                          autoSkip: true,
+                          maxRotation: 0,
+                          minRotation: 0
+                        }
+                      }
+
                   }
                 }
               });
