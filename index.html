@@ -31,6 +31,12 @@
   </style>
 </head>
 <body>
+<div style="background:#eef; padding:20px; border-radius:10px; max-width:400px; margin:20px auto;">
+  <h2>🌐 Clima externo (OpenWeather)</h2>
+  <p><strong>Temperatura:</strong> <span id="tempWeb">Cargando...</span></p>
+  <p><strong>Humedad:</strong> <span id="humWeb">Cargando...</span></p>
+  <p><strong>Presión:</strong> <span id="presionWeb">Cargando...</span></p>
+</div>
   <h1>Estación Meteorológica</h1>
 
   <div class="grafico">
@@ -100,6 +106,26 @@
     }
 
     cargarGraficos();
+<script>
+  const apiKey = "9ee5d7e13cf00cdb7b2696791348f6af"; // 🔁 Reemplazá con la tuya
+  const lat = -34.61;
+  const lon = -58.38;
+
+  async function cargarDatosExternos() {
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const temp = data.main.temp;
+    const hum = data.main.humidity;
+    const presion = data.main.pressure;
+
+    document.getElementById("tempWeb").textContent = `${temp} °C`;
+    document.getElementById("humWeb").textContent = `${hum} %`;
+    document.getElementById("presionWeb").textContent = `${presion} hPa`;
+  }
+
+  cargarDatosExternos();
   </script>
 </body>
 </html>
