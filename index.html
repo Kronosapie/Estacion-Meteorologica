@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Estación Meteorológica</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f2f4f8;
+      color: #333;
+      text-align: center;
+      padding: 2rem;
+    }
+    .tarjeta {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    .tarjeta h2 {
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+    }
+    .tarjeta p {
+      font-size: 1.1rem;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📡 Estación Meteorológica</h1>
+
+  <div class="tarjeta">
+    <h2>🌐 Comparación de Temperatura</h2>
+    <p><strong>OpenWeather:</strong> <span id="tempWeb">Cargando...</span></p>
+    <p><strong>Mi estación:</strong> <span id="tempThing">Cargando...</span></p>
+    <p><strong>Diferencia:</strong> <span id="tempDiff">Cargando...</span></p>
+  </div>
+
+  <!-- GRÁFICOS -->
+  <div class="tarjeta">
+    <h2>📈 Temperatura (°C)</h2>
+    <iframe width="100%" height="260" style="border:1px solid #ccc; border-radius:8px;"
+      src="https://thingspeak.com/channels/2991138/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&api_key=CQCKW0T4ORH6UR3H">
+    </iframe>
+  </div>
+
+  <div class="tarjeta">
+    <h2>💧 Humedad (%)</h2>
+    <iframe width="100%" height="260" style="border:1px solid #ccc; border-radius:8px;"
+      src="https://thingspeak.com/channels/2991138/charts/2?bgcolor=%23ffffff&color=%2300aaff&dynamic=true&results=60&type=line&api_key=CQCKW0T4ORH6UR3H">
+    </iframe>
+  </div>
+
+  <div class="tarjeta">
+    <h2>📏 Presión (hPa)</h2>
+    <iframe width="100%" height="260" style="border:1px solid #ccc; border-radius:8px;"
+      src="https://thingspeak.com/channels/2991138/charts/3?bgcolor=%23ffffff&color=%2300cc66&dynamic=true&results=60&type=line&api_key=CQCKW0T4ORH6UR3H">
+    </iframe>
+  </div>
+
+  <div class="tarjeta">
+    <h2>🏔️ Altitud (m)</h2>
+    <iframe width="100%" height="260" style="border:1px solid #ccc; border-radius:8px;"
+      src="https://thingspeak.com/channels/2991138/charts/4?bgcolor=%23ffffff&color=%23ff6600&dynamic=true&results=60&type=line&api_key=CQCKW0T4ORH6UR3H">
+    </iframe>
+  </div>
+
+  <!-- SCRIPT PARA COMPARACIÓN -->
+  <script>
+    const apiKeyOW = "9ee5d7e13cf00cdb7b2696791348f6af";
+    const lat = -34.61;
+    const lon = -58.38;
+    const readKey = "CQCKW0T4ORH6UR3H";
+
+    async function cargarDatos() {
+      let tempWeb = NaN;
+      let tempThing = NaN;
+
+      // API externa (OpenWeatherMap)
+      try {
+        const urlOW = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKeyOW}`;
+        const resOW = await fetch(urlOW);
+        const dataOW = await resOW.json();
+        tempWeb = dataOW.main.temp;
+        document.getElementById("tempWeb").textContent = `${tempWeb.toFixed(1)} °C`;
+      } catch (e) {
+        document.getElementById("tempWeb").textContent = "Error";
+        console.error("Error con OpenWeather:", e);
+      }
+
+      // Temperatura local (ThingSpeak Field 1)
+      try {
+        const urlThing = `https://api.thingspeak.com/channels/2991138/fields/1/last.json?api_key=${readKey}`;
+        const resThing = await fetch(urlThing);
+        const dataThing = await resThing.json();
+        tempThing = parseFloat(dataThing.field1);
+        document.getElementById("tempThing").textContent = `${tempThing.toFixed(1)} °C`;
+      } catch (e) {
+        document.getElementById("tempThing").textContent = "Error";
+        console.error("Error con ThingSpeak:", e);
+      }
+
+      // Comparación
+      if (!isNaN(tempWeb) && !isNaN(tempThing)) {
+        const diff = (tempThing - tempWeb).toFixed(1);
+        const signo = diff >= 0 ? "+" : "";
+        document.getElementById("tempDiff").textContent = `${signo}${diff} °C`;
+      } else {
+        document.getElementById("tempDiff").textContent = "No disponible";
+      }
+    }
+
+    cargarDatos();
+  </script>
+
+</body>
+</html>
