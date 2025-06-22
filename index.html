@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gráfico con Chart.js</title>
+  <title>Estación Meteorológica - Chart.js</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -13,88 +13,116 @@
       text-align: center;
       padding: 2rem;
     }
-    canvas {
-      max-width: 600px;
-      margin: 0 auto;
+    .grafico-container {
+      max-width: 800px;
+      margin: 3rem auto;
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-bottom: 1.2rem;
+    }
+    canvas {
+      width: 100% !important;
+      height: 400px !important;
     }
   </style>
 </head>
 <body>
 
-  <h1>📈 Temperatura - Mi Estación</h1>
-  <canvas id="graficoTemp"></canvas>
+  <h1>📡 Estación Meteorológica</h1>
+
+  <div class="grafico-container">
+    <h2>🌡️ Temperatura (°C)</h2>
+    <canvas id="graficoTemp"></canvas>
+  </div>
+
+  <div class="grafico-container">
+    <h2>💧 Humedad (%)</h2>
+    <canvas id="graficoHum"></canvas>
+  </div>
+
+  <div class="grafico-container">
+    <h2>📏 Presión (hPa)</h2>
+    <canvas id="graficoPres"></canvas>
+  </div>
+
+  <div class="grafico-container">
+    <h2>🏔️ Altitud (m)</h2>
+    <canvas id="graficoAlt"></canvas>
+  </div>
 
   <script>
-    // Configuraciones básicas
     const canalID = 2991138;
-    const campoID = 1;
-    const apiKey = "CQCKW0T4ORH6UR3H";  // Clave de lectura
+    const apiKey = "CQCKW0T4ORH6UR3H";
 
-    // URL del feed de ThingSpeak (últimos 60 puntos)
-    const url = `https://api.thingspeak.com/channels/${canalID}/fields/${campoID}.json?api_key=${apiKey}&results=60`;
+    const campos = [
+      { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp" },
+      { id: 2, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum" },
+      { id: 3, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres" },
+      { id: 4, nombre: "Altitud (m)", color: "#ff8800", canvasId: "graficoAlt" }
+    ];
 
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        const feeds = data.feeds;
+    campos.forEach(campo => {
+      const url = `https://api.thingspeak.com/channels/${canalID}/fields/${campo.id}.json?api_key=${apiKey}&results=60`;
 
-        // Extraemos tiempo y temperatura
-        const labels = feeds.map(e => {
-          const hora = new Date(e.created_at);
-          return hora.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
-        });
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const feeds = data.feeds;
+          const labels = feeds.map(e => {
+            const hora = new Date(e.created_at);
+            return hora.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+          });
 
-        const temperaturas = feeds.map(e => parseFloat(e[`field${campoID}`]));
+          const valores = feeds.map(e => parseFloat(e[`field${campo.id}`]));
 
-        // Creamos el gráfico con Chart.js
-        new Chart(document.getElementById("graficoTemp"), {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [{
-              label: "Temperatura (°C)",
-              data: temperaturas,
-              fill: true,
-              borderColor: "#ff5252",
-              backgroundColor: "rgba(255, 82, 82, 0.2)",
-              tension: 0.3,
-              pointRadius: 3
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                display: true
-              },
-              title: {
-                display: true,
-                text: "Últimas mediciones (Temperatura)"
-              }
+          new Chart(document.getElementById(campo.canvasId), {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [{
+                label: campo.nombre,
+                data: valores,
+                fill: true,
+                borderColor: campo.color,
+                backgroundColor: campo.color + "33", // transparencia
+                tension: 0.3,
+                pointRadius: 2
+              }]
             },
-            scales: {
-              y: {
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: true },
                 title: {
-                  display: true,
-                  text: "°C"
+                  display: false
                 }
               },
-              x: {
-                title: {
-                  display: true,
-                  text: "Hora"
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  title: {
+                    display: true,
+                    text: campo.nombre
+                  }
+                },
+                x: {
+                  title: {
+                    display: true,
+                    text: "Hora"
+                  }
                 }
               }
             }
-          }
+          });
+        })
+        .catch(err => {
+          console.error(`Error cargando campo ${campo.id}:`, err);
         });
-      })
-      .catch(error => {
-        console.error("Error al obtener datos de ThingSpeak:", error);
-      });
+    });
   </script>
 
 </body>
