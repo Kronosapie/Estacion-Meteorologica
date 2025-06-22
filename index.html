@@ -7,54 +7,88 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: system-ui, sans-serif;
       background: #f7f9fc;
       color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
       text-align: center;
-      padding: 2rem;
+      padding: 1.5rem 1rem;
+      background: #00aaff;
+      color: white;
     }
+
+    main {
+      padding: 1rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+
     .grafico-container {
-      max-width: 800px;
-      margin: 3rem auto;
       background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      margin: 1.5rem auto;
+      padding: 1rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
+
     h2 {
-      margin-bottom: 1.2rem;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
     }
+
     canvas {
       width: 100% !important;
-      height: 400px !important;
+      height: auto !important;
+      max-height: 320px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        font-size: 1.2rem;
+      }
+      h2 {
+        font-size: 1rem;
+      }
+      .grafico-container {
+        padding: 0.8rem;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h1>📡 Estación Meteorológica</h1>
+  <header>
+    <h1>📡 Estación Meteorológica</h1>
+  </header>
 
-  <div class="grafico-container">
-    <h2>🌡️ Temperatura (°C)</h2>
-    <canvas id="graficoTemp"></canvas>
-  </div>
+  <main>
+    <div class="grafico-container">
+      <h2>🌡️ Temperatura (°C)</h2>
+      <canvas id="graficoTemp"></canvas>
+    </div>
 
-  <div class="grafico-container">
-    <h2>💧 Humedad (%)</h2>
-    <canvas id="graficoHum"></canvas>
-  </div>
+    <div class="grafico-container">
+      <h2>💧 Humedad (%)</h2>
+      <canvas id="graficoHum"></canvas>
+    </div>
 
-  <div class="grafico-container">
-    <h2>📏 Presión (hPa)</h2>
-    <canvas id="graficoPres"></canvas>
-  </div>
+    <div class="grafico-container">
+      <h2>📏 Presión (hPa)</h2>
+      <canvas id="graficoPres"></canvas>
+    </div>
 
-  <div class="grafico-container">
-    <h2>🏔️ Altitud (m)</h2>
-    <canvas id="graficoAlt"></canvas>
-  </div>
+    <div class="grafico-container">
+      <h2>🏔️ Altitud (m)</h2>
+      <canvas id="graficoAlt"></canvas>
+    </div>
+  </main>
 
-  <script>
+<script>
   const canalID = 2991138;
   const apiKey = "CQCKW0T4ORH6UR3H";
 
@@ -178,7 +212,7 @@
         console.error(`Error cargando campo ${campo.id}:`, err);
       });
   });
-  </script>
+</script>
 
 </body>
 </html>
