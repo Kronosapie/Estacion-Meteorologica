@@ -93,16 +93,22 @@
   </main>
 
 <script>
-  const canalID = 2991138;
-  const apiKey = "CQCKW0T4ORH6UR3H";
+const canalID = 2991138;
+const apiKey = "CQCKW0T4ORH6UR3H";
+const apiKeyOW = "9ee5d7e13cf00cdb7b2696791348f6af";
+const lat = -34.61;
+const lon = -58.38;
 
-  const campos = [
-    { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp" },
-    { id: 2, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum" },
-    { id: 3, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres" },
-    { id: 4, nombre: "Altitud (m)", color: "#ff8800", canvasId: "graficoAlt" }
-  ];
+const campos = [
+  { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp", compararOW: true },
+  { id: 2, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres", compararOW: true },
+  { id: 3, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum", compararOW: true },
+  { id: 4, nombre: "Altitud (m)", color: "#ff8800", canvasId: "graficoAlt", compararOW: false }
+];
 
+let charts = {}; // guardamos las instancias Chart.js
+
+function cargarGraficos() {
   campos.forEach(campo => {
     const url = `https://api.thingspeak.com/channels/${canalID}/fields/${campo.id}.json?api_key=${apiKey}&results=60`;
 
@@ -117,112 +123,101 @@
 
         const valores = feeds.map(e => parseFloat(e[`field${campo.id}`]));
 
-        // Si es el gráfico de temperatura, agregamos comparación con OpenWeather
-        if (campo.id === 1) {
-          const lat = -34.61;
-          const lon = -58.38;
-          const apiKeyOW = "9ee5d7e13cf00cdb7b2696791348f6af";
-
+        if (campo.compararOW && campo.id <= 3) {
           fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKeyOW}`)
             .then(res => res.json())
             .then(owData => {
-              const tempOW = owData.main.temp;
-              const tempOWArray = new Array(valores.length).fill(tempOW);
+              const valorOW = campo.id === 1 ? owData.main.temp :
+                              campo.id === 2 ? owData.main.pressure :
+                              owData.main.humidity;
 
-              new Chart(document.getElementById(campo.canvasId), {
-                type: "line",
-                data: {
-                  labels: labels,
-                  datasets: [
-                    {
-                      label: "Mi estación",
-                      data: valores,
-                      fill: true,
-                      borderColor: "#ff5252",
-                      backgroundColor: "#ff525233",
-                      tension: 0.3,
-                      pointRadius: 2
-                    },
-                    {
-                      label: "OpenWeather",
-                      data: tempOWArray,
-                      fill: false,
-                      borderColor: "#3399ff",
-                      backgroundColor: "#3399ff33",
-                      borderDash: [5, 5],
-                      tension: 0.1,
-                      pointRadius: 0
-                    }
-                  ]
+              const datosOW = new Array(valores.length).fill(valorOW);
+
+              renderizarGrafico(campo.canvasId, labels, [
+                {
+                  label: "Mi estación",
+                  data: valores,
+                  borderColor: campo.color,
+                  backgroundColor: campo.color + "33",
+                  fill: true,
+                  tension: 0.3,
+                  pointRadius: 2
                 },
-                options: {
-                  responsive: true,
-                  plugins: {
-                    legend: { display: true },
-                    title: {
-                      display: true,
-                      text: "Temperatura (Estación vs OpenWeather)"
-                    }
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: false,
-                      title: { display: true, text: "Temperatura °C" }
-                    },
-                   x: {
-                        title: { display: true, text: "Hora" },
-                        ticks: {
-                          maxTicksLimit: 12,
-                          autoSkip: true,
-                          maxRotation: 0,
-                          minRotation: 0
-                        }
-                      }
-
-                  }
+                {
+                  label: "OpenWeather",
+                  data: datosOW,
+                  borderColor: "#3399ff",
+                  borderDash: [5, 5],
+                  fill: false,
+                  tension: 0.1,
+                  pointRadius: 0
                 }
-              });
+              ], campo.nombre);
             });
-
         } else {
-          // Gráfico normal (sin comparación)
-          new Chart(document.getElementById(campo.canvasId), {
-            type: "line",
-            data: {
-              labels: labels,
-              datasets: [{
-                label: campo.nombre,
-                data: valores,
-                fill: true,
-                borderColor: campo.color,
-                backgroundColor: campo.color + "33",
-                tension: 0.3,
-                pointRadius: 2
-              }]
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: { display: true },
-                title: { display: false }
-              },
-              scales: {
-                y: {
-                  beginAtZero: false,
-                  title: { display: true, text: campo.nombre }
-                },
-                x: {
-                  title: { display: true, text: "Hora" }
-                }
-              }
-            }
-          });
+          renderizarGrafico(campo.canvasId, labels, [{
+            label: campo.nombre,
+            data: valores,
+            borderColor: campo.color,
+            backgroundColor: campo.color + "33",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 2
+          }], campo.nombre);
         }
       })
-      .catch(err => {
-        console.error(`Error cargando campo ${campo.id}:`, err);
-      });
+      .catch(err => console.error(`Error en campo ${campo.id}:`, err));
   });
+}
+
+function renderizarGrafico(canvasId, labels, datasets, titulo) {
+  const ctx = document.getElementById(canvasId).getContext("2d");
+
+  if (charts[canvasId]) {
+    charts[canvasId].data.labels = labels;
+    charts[canvasId].data.datasets = datasets;
+    charts[canvasId].update();
+  } else {
+    charts[canvasId] = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          title: {
+            display: true,
+            text: titulo
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: "Hora" },
+            ticks: {
+              maxTicksLimit: 12,
+              autoSkip: true,
+              maxRotation: 0,
+              minRotation: 0
+            }
+          },
+          y: {
+            beginAtZero: false,
+            title: { display: true, text: titulo }
+          }
+        }
+      }
+    });
+  }
+}
+
+// Ejecutar ahora
+cargarGraficos();
+
+// Ejecutar cada 60 segundos
+setInterval(cargarGraficos, 60000);
 </script>
 
 </body>
