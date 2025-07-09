@@ -97,11 +97,7 @@
       <canvas id="graficoPres"></canvas>
     </div>
 
-    <div class="grafico-container">
-      <h2>🏔️ Altitud (m)</h2>
-      <div class="valor-actual" id="valorAlt">--</div>
-      <canvas id="graficoAlt"></canvas>
-    </div>
+ 
   </main>
 <script>
 const canalID = 2991138;
@@ -114,7 +110,7 @@ const campos = [
   { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp", compararOW: true },
   { id: 3, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum", compararOW: true },
   { id: 2, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres", compararOW: true },
-  { id: 4, nombre: "Altitud (m)", color: "#ff8800", canvasId: "graficoAlt", compararOW: false }
+
 ];
 
 let charts = {};
