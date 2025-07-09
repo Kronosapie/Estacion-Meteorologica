@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-.valor-actual {
-  text-align: center;
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10px;
-}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Estación Meteorológica</title>
@@ -49,6 +42,14 @@
       text-align: center;
     }
 
+    .valor-actual {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
     canvas {
       width: 100% !important;
       max-height: 340px;
@@ -80,26 +81,28 @@
   <main>
     <div class="grafico-container">
       <h2>🌡️ Temperatura (°C)</h2>
-<div class="valor-actual" id="valorTemp">--</div>
-<canvas id="graficoTemp"></canvas>
-     
+      <div class="valor-actual" id="valorTemp">--</div>
+      <canvas id="graficoTemp"></canvas>
     </div>
 
     <div class="grafico-container">
       <h2>💧 Humedad (%)</h2>
-     <div class="valor-actual" id="valorPres">--</div>
-<canvas id="graficoPres"></canvas>
+      <div class="valor-actual" id="valorHum">--</div>
+      <canvas id="graficoHum"></canvas>
     </div>
 
     <div class="grafico-container">
       <h2>📏 Presión (hPa)</h2>
-  <div class="valor-actual" id="valorHum">--</div>
-<canvas id="graficoHum"></canvas>
+      <div class="valor-actual" id="valorPres">--</div>
+      <canvas id="graficoPres"></canvas>
     </div>
 
-  
+    <div class="grafico-container">
+      <h2>🏔️ Altitud (m)</h2>
+      <div class="valor-actual" id="valorAlt">--</div>
+      <canvas id="graficoAlt"></canvas>
+    </div>
   </main>
-
 <script>
 const canalID = 2991138;
 const apiKey = "CQCKW0T4ORH6UR3H";
@@ -109,12 +112,12 @@ const lon = -58.38;
 
 const campos = [
   { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp", compararOW: true },
-  { id: 2, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres", compararOW: true },
   { id: 3, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum", compararOW: true },
-  
+  { id: 2, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres", compararOW: true },
+  { id: 4, nombre: "Altitud (m)", color: "#ff8800", canvasId: "graficoAlt", compararOW: false }
 ];
 
-let charts = {}; // guardamos las instancias Chart.js
+let charts = {};
 
 function cargarGraficos() {
   campos.forEach(campo => {
@@ -130,6 +133,8 @@ function cargarGraficos() {
         });
 
         const valores = feeds.map(e => parseFloat(e[`field${campo.id}`]));
+        const ultimo = valores[valores.length - 1];
+        document.getElementById("valor" + campo.canvasId.replace("grafico", "")).innerText = ultimo.toFixed(1);
 
         if (campo.compararOW && campo.id <= 3) {
           fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKeyOW}`)
@@ -138,7 +143,6 @@ function cargarGraficos() {
               const valorOW = campo.id === 1 ? owData.main.temp :
                               campo.id === 2 ? owData.main.pressure :
                               owData.main.humidity;
-
               const datosOW = new Array(valores.length).fill(valorOW);
 
               renderizarGrafico(campo.canvasId, labels, [
@@ -221,12 +225,10 @@ function renderizarGrafico(canvasId, labels, datasets, titulo) {
   }
 }
 
-// Ejecutar ahora
 cargarGraficos();
-
-// Ejecutar cada 60 segundos
 setInterval(cargarGraficos, 60000);
 </script>
-
 </body>
+
 </html>
+
