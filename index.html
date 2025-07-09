@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+.valor-actual {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Estación Meteorológica</title>
@@ -73,17 +80,21 @@
   <main>
     <div class="grafico-container">
       <h2>🌡️ Temperatura (°C)</h2>
-      <canvas id="graficoTemp"></canvas>
+<div class="valor-actual" id="valorTemp">--</div>
+<canvas id="graficoTemp"></canvas>
+     
     </div>
 
     <div class="grafico-container">
       <h2>💧 Humedad (%)</h2>
-      <canvas id="graficoHum"></canvas>
+     <div class="valor-actual" id="valorPres">--</div>
+<canvas id="graficoPres"></canvas>
     </div>
 
     <div class="grafico-container">
       <h2>📏 Presión (hPa)</h2>
-      <canvas id="graficoPres"></canvas>
+  <div class="valor-actual" id="valorHum">--</div>
+<canvas id="graficoHum"></canvas>
     </div>
 
   
