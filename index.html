@@ -99,83 +99,77 @@
 
  
   </main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const canalID = 2991138;
 const apiKey = "CQCKW0T4ORH6UR3H";
-const apiKeyOW = "9ee5d7e13cf00cdb7b2696791348f6af";
-const lat = -34.61;
-const lon = -58.38;
 
 const campos = [
-  { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp", compararOW: true },
-  { id: 3, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum", compararOW: true },
-  { id: 2, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres", compararOW: true },
+  { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp" },
+  { id: 3, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum" },
+  { id: 2, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres" },
 
 ];
 
 let charts = {};
 
 function cargarGraficos() {
-  campos.forEach(campo => {
-    const url = `https://api.thingspeak.com/channels/${canalID}/fields/${campo.id}.json?api_key=${apiKey}&results=60`;
+  campos.forEach(campo => cargarPromediosHora(campo));
+}
 
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        const feeds = data.feeds;
-        const labels = feeds.map(e => {
-          const hora = new Date(e.created_at);
-          return hora.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
-        });
+function cargarPromediosHora(campo) {
+  const hoy = new Date();
+  const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0);
+  const fin = hoy;
+  const formato = d => d.toISOString().split(".")[0] + "Z";
 
-        const valores = feeds.map(e => parseFloat(e[`field${campo.id}`]));
-        const ultimo = valores[valores.length - 1];
-        document.getElementById("valor" + campo.canvasId.replace("grafico", "")).innerText = ultimo.toFixed(1);
+  const url = `https://api.thingspeak.com/channels/${canalID}/fields/${campo.id}.json?api_key=${apiKey}&start=${formato(inicio)}&end=${formato(fin)}&results=1000`;
 
-        if (campo.compararOW && campo.id <= 3) {
-          fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKeyOW}`)
-            .then(res => res.json())
-            .then(owData => {
-              const valorOW = campo.id === 1 ? owData.main.temp :
-                              campo.id === 2 ? owData.main.pressure :
-                              owData.main.humidity;
-              const datosOW = new Array(valores.length).fill(valorOW);
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      const feeds = data.feeds;
 
-              renderizarGrafico(campo.canvasId, labels, [
-                {
-                  label: "Mi estación",
-                  data: valores,
-                  borderColor: campo.color,
-                  backgroundColor: campo.color + "33",
-                  fill: true,
-                  tension: 0.3,
-                  pointRadius: 2
-                },
-                {
-                  label: "OpenWeather",
-                  data: datosOW,
-                  borderColor: "#3399ff",
-                  borderDash: [5, 5],
-                  fill: false,
-                  tension: 0.1,
-                  pointRadius: 0
-                }
-              ], campo.nombre);
-            });
-        } else {
-          renderizarGrafico(campo.canvasId, labels, [{
-            label: campo.nombre,
-            data: valores,
-            borderColor: campo.color,
-            backgroundColor: campo.color + "33",
-            fill: true,
-            tension: 0.3,
-            pointRadius: 2
-          }], campo.nombre);
+      // Agrupar por hora
+      const porHora = {};
+      feeds.forEach(e => {
+        const hora = new Date(e.created_at).getHours();
+        const val = parseFloat(e[`field${campo.id}`]);
+        if (!isNaN(val)) {
+          if (!porHora[hora]) porHora[hora] = [];
+          porHora[hora].push(val);
         }
-      })
-      .catch(err => console.error(`Error en campo ${campo.id}:`, err));
-  });
+      });
+
+      const labels = [];
+      const promedios = [];
+
+      for (let h = 0; h <= hoy.getHours(); h++) {
+        const datos = porHora[h] || [];
+        if (datos.length) {
+          const prom = datos.reduce((a, b) => a + b, 0) / datos.length;
+          labels.push(h.toString().padStart(2, '0') + ":00");
+          promedios.push(parseFloat(prom.toFixed(2)));
+        }
+      }
+
+      // Mostrar último promedio arriba del gráfico
+      const idValor = "valor" + campo.canvasId.replace("grafico", "");
+      if (document.getElementById(idValor)) {
+        document.getElementById(idValor).innerText = promedios[promedios.length - 1].toFixed(1);
+      }
+
+      renderizarGrafico(campo.canvasId, labels, [{
+        label: campo.nombre + " (prom/h)",
+        data: promedios,
+        borderColor: campo.color,
+        backgroundColor: campo.color + "33",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3
+      }], campo.nombre);
+    })
+    .catch(error => console.error("Error al cargar datos:", error));
 }
 
 function renderizarGrafico(canvasId, labels, datasets, titulo) {
@@ -205,8 +199,8 @@ function renderizarGrafico(canvasId, labels, datasets, titulo) {
           x: {
             title: { display: true, text: "Hora" },
             ticks: {
-              maxTicksLimit: 12,
-              autoSkip: true,
+              maxTicksLimit: 24,
+              autoSkip: false,
               maxRotation: 0,
               minRotation: 0
             }
@@ -221,8 +215,9 @@ function renderizarGrafico(canvasId, labels, datasets, titulo) {
   }
 }
 
+// Cargar ahora y cada 5 minutos
 cargarGraficos();
-setInterval(cargarGraficos, 300000);
+setInterval(cargarGraficos, 5 * 60 * 1000);
 </script>
 </body>
 
