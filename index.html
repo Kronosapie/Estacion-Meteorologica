@@ -172,19 +172,24 @@
         const fecha = new Date(f.created_at);
         return fecha.getHours().toString().padStart(2, '0') + ':' + fecha.getMinutes().toString().padStart(2, '0');
       });
+
       const valores = data.feeds.map(f => parseFloat(f[`field${campo.id}`]));
-      document.getElementById("valor" + campo.canvasId.replace("grafico", "")).innerText = valores.at(-1).toFixed(1);
-      renderizarGrafico(campo.canvasId, labels, [{ label: campo.nombre, data: valores, borderColor: campo.color, backgroundColor: campo.color + "33", fill: true, tension: 0.3 }], campo.nombre);
+      const idValor = "valor" + campo.canvasId.replace("grafico", "");
+
+      if (document.getElementById(idValor)) {
+        document.getElementById(idValor).innerText = valores.at(-1).toFixed(1);
+      }
+
+      renderizarGrafico(campo.canvasId, labels, [{
+        label: campo.nombre,
+        data: valores,
+        borderColor: campo.color,
+        backgroundColor: campo.color + "33",
+        fill: true,
+        tension: 0.3
+      }], campo.nombre);
     });
-}/fields/${campo.id}.json?api_key=${apiKey}&results=60`)
-        .then(r => r.json())
-        .then(data => {
-          const labels = data.feeds.map(f => f.created_at.slice(11, 16));
-          const valores = data.feeds.map(f => parseFloat(f[`field${campo.id}`]));
-          document.getElementById("valor" + campo.canvasId.replace("grafico", "")).innerText = valores.at(-1).toFixed(1);
-          renderizarGrafico(campo.canvasId, labels, [{ label: campo.nombre, data: valores, borderColor: campo.color, backgroundColor: campo.color + "33", fill: true, tension: 0.3 }], campo.nombre);
-        });
-    }
+}
 
     function cargarPromediosHora(campo) {
       const hoy = new Date();
