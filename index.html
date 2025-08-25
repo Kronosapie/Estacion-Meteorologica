@@ -89,6 +89,36 @@
         margin: 1.5rem auto;
       }
     }
+    .brujula {
+  width: 150px;
+  height: 150px;
+  border: 6px solid #00bcd4;
+  border-radius: 50%;
+  position: relative;
+  background: #f9f9f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flecha {
+  width: 6px;
+  height: 70px;
+  background: #ff1744;
+  position: absolute;
+  bottom: 50%;
+  transform-origin: bottom center;
+  transform: rotate(0deg);
+  transition: transform 0.5s ease-in-out;
+}
+
+.brujula::before {
+  content: "N";
+  position: absolute;
+  top: 8px;
+  font-weight: bold;
+  color: #333;
+}
   </style>
 </head>
 <body>
@@ -131,6 +161,20 @@
   <div class="valor-actual" id="direccionLocal">Dirección local: --</div>
   <div class="valor-actual" id="direccionAPI">Dirección API: --</div>
   <div class="valor-actual" id="velocidadAPI">Velocidad: --</div>
+</div>
+    <div class="grafico-container" style="text-align:center;">
+  <h2>🌬️ Viento</h2>
+  <div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">
+    <div class="brujula-container">
+      <div class="brujula">
+        <div class="flecha" id="flecha"></div>
+      </div>
+      <div class="valor-actual" id="direccionTexto">--</div>
+    </div>
+    <div>
+      <div class="valor-actual" id="velocidadAPI">Velocidad: -- km/h</div>
+    </div>
+  </div>
 </div>
   </main>
 
@@ -303,11 +347,47 @@ function convertirCardinal(grados) {
   const index = Math.round(grados / 22.5) % 16;
   return rumbos[index];
 }
+async function actualizarViento() {
+  try {
+    // ✅ Datos desde OpenWeather
+    const apiKey = "9ee5d7e13cf00cdb7b2696791348f6af"; // tu API key
+    const ciudad = "Buenos Aires,AR";
+    const respAPI = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${apiKey}&units=metric`);
+    const dataAPI = await respAPI.json();
 
+    const velocidad = (dataAPI.wind.speed * 3.6).toFixed(1); // m/s → km/h
+    const direccionGrados = dataAPI.wind.deg;
+
+    // ✅ Actualizar velocidad
+    document.getElementById("velocidadAPI").innerText = `Velocidad: ${velocidad} km/h`;
+
+    // ✅ Actualizar flecha
+    const flecha = document.getElementById("flecha");
+    flecha.style.transform = `rotate(${direccionGrados}deg)`;
+
+    // ✅ Texto con cardinal
+    const direccionCardinal = convertirCardinal(direccionGrados);
+    document.getElementById("direccionTexto").innerText = `${direccionGrados}° (${direccionCardinal})`;
+
+  } catch (error) {
+    console.error("Error al actualizar viento:", error);
+  }
+}
+
+// Convierte grados → texto cardinal
+function convertirCardinal(grados) {
+  const rumbos = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+  const index = Math.round(grados / 22.5) % 16;
+  return rumbos[index];
+}
+
+setInterval(actualizarViento, 60000);
+actualizarViento();
 // ✅ Ejecuta cada 60 segundos
 setInterval(actualizarViento, 60000);
 actualizarViento(); // primera vez
   </script>
 </body>
 </html>
+
 
