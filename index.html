@@ -126,6 +126,12 @@
       <div class="valor-actual" id="valorAlt">--</div>
       <canvas id="graficoAlt"></canvas>
     </div>
+    <div class="grafico-container">
+  <h2>🌬️ Viento</h2>
+  <div class="valor-actual" id="direccionLocal">Dirección local: --</div>
+  <div class="valor-actual" id="direccionAPI">Dirección API: --</div>
+  <div class="valor-actual" id="velocidadAPI">Velocidad: --</div>
+</div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -265,6 +271,43 @@
 
     cargarGraficos();
     setInterval(cargarGraficos, 5 * 60 * 1000);
+    async function actualizarViento() {
+  try {
+    // ✅ Dirección local desde ThingSpeak (field5)
+    const respLocal = await fetch("https://api.thingspeak.com/channels/2991138/fields/5/last.json");
+    const dataLocal = await respLocal.json();
+    const direccionLocal = dataLocal.field5 ? `${dataLocal.field5}°` : "--";
+    document.getElementById("direccionLocal").innerText = `Dirección local: ${direccionLocal}`;
+
+    // ✅ Datos desde OpenWeather
+    const apiKey = "9ee5d7e13cf00cdb7b2696791348f6af"; // ⬅️ tu API key
+    const ciudad = "Buenos Aires,AR";
+    const respAPI = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${apiKey}&units=metric`);
+    const dataAPI = await respAPI.json();
+
+    const velocidad = (dataAPI.wind.speed * 3.6).toFixed(1); // m/s → km/h
+    const direccionGrados = dataAPI.wind.deg;
+    const direccionCardinal = convertirCardinal(direccionGrados);
+
+    document.getElementById("direccionAPI").innerText = `Dirección API: ${direccionGrados}° (${direccionCardinal})`;
+    document.getElementById("velocidadAPI").innerText = `Velocidad: ${velocidad} km/h`;
+
+  } catch (error) {
+    console.error("Error al actualizar viento:", error);
+  }
+}
+
+// ✅ Convierte grados → texto cardinal
+function convertirCardinal(grados) {
+  const rumbos = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+  const index = Math.round(grados / 22.5) % 16;
+  return rumbos[index];
+}
+
+// ✅ Ejecuta cada 60 segundos
+setInterval(actualizarViento, 60000);
+actualizarViento(); // primera vez
   </script>
 </body>
 </html>
+
