@@ -83,35 +83,35 @@
 
     <!-- Temperatura -->
     <div class="grafico-container">
-      <h2>🌡️ Temperatura (°C)</h2>
+      <h2> Temperatura (°C)</h2>
       <div class="valor-actual" id="vTemp">--</div>
       <canvas id="cTemp"></canvas>
     </div>
 
     <!-- Humedad -->
     <div class="grafico-container">
-      <h2>💧 Humedad (%)</h2>
+      <h2> Humedad (%)</h2>
       <div class="valor-actual" id="vHum">--</div>
       <canvas id="cHum"></canvas>
     </div>
 
     <!-- Presión -->
     <div class="grafico-container">
-      <h2>📏 Presión (hPa)</h2>
+      <h2> Presión (hPa)</h2>
       <div class="valor-actual" id="vPres">--</div>
       <canvas id="cPres"></canvas>
     </div>
 
     <!-- Altitud -->
     <div class="grafico-container">
-      <h2>🏔️ Altitud (m)</h2>
+      <h2> Altitud (m)</h2>
       <div class="valor-actual" id="vAlt">--</div>
       <canvas id="cAlt"></canvas>
     </div>
 
     <!-- Viento: dos brújulas -->
     <div class="grafico-container">
-      <h2>🌬️ Dirección del viento</h2>
+      <h2> Dirección del viento</h2>
       <div class="wind-wrapper">
         <!-- OpenWeather -->
         <div class="brujula-container">
@@ -132,9 +132,9 @@
 
   <script>
     // ====== CONFIG ======
-    const canalID   = 2991138;                         // ⬅️ Tu canal
-    const tsReadKey = "CQCKW0T4ORH6UR3H";              // ⬅️ API key de lectura (si tu canal es privado)
-    const apiKeyOW  = "9ee5d7e13cf00cdb7b2696791348f6af"; // ⬅️ OpenWeather
+    const canalID   = 2991138;                         //   canal
+    const tsReadKey = "CQCKW0T4ORH6UR3H";              //  API key de lectura 
+    const apiKeyOW  = "9ee5d7e13cf00cdb7b2696791348f6af"; // OpenWeather
     const ciudadOW  = "Buenos Aires,AR";
     const autoRefreshMs = 60000; // refresco 60 s
     let modo = "recientes"; // 'recientes' | 'promedios'
@@ -284,3 +284,4 @@
   </script>
 </body>
 </html>
+
