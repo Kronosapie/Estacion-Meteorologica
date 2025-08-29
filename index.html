@@ -119,6 +119,7 @@
   font-weight: bold;
   color: #333;
 }
+
   </style>
 </head>
 <body>
@@ -158,19 +159,32 @@
     </div>
     <div class="grafico-container">
 
-  <h2>🌬️ Viento</h2>
-  <div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">
+  <div class="grafico-container" style="text-align:center;">
+  <h2>🌬️ Dirección del Viento</h2>
+  <div style="display:flex; justify-content:center; gap:40px; flex-wrap:wrap;">
+
+    <!-- Brújula API -->
     <div class="brujula-container">
+      <h3>OpenWeather</h3>
       <div class="brujula">
-        <div class="flecha" id="flecha"></div>
+        <div class="flecha" id="flechaAPI"></div>
       </div>
-      <div class="valor-actual" id="direccionTexto">--</div>
-    </div>
-    <div>
+      <div class="valor-actual" id="direccionAPI">--</div>
       <div class="valor-actual" id="velocidadAPI">Velocidad: -- km/h</div>
     </div>
+
+    <!-- Brújula ESP -->
+    <div class="brujula-container">
+      <h3>Mi Estación</h3>
+      <div class="brujula">
+        <div class="flecha" id="flechaESP"></div>
+      </div>
+      <div class="valor-actual" id="direccionESP">--</div>
+    </div>
+
   </div>
 </div>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -312,64 +326,47 @@
     setInterval(cargarGraficos, 5 * 60 * 1000);
     async function actualizarViento() {
   try {
-    // ✅ Dirección local desde ThingSpeak (field5)
+    //  Dirección local desde ThingSpeak (field5)
     const respLocal = await fetch("https://api.thingspeak.com/channels/2991138/fields/5/last.json");
     const dataLocal = await respLocal.json();
     const direccionLocal = dataLocal.field5 ? `${dataLocal.field5}°` : "--";
     document.getElementById("direccionLocal").innerText = `Dirección local: ${direccionLocal}`;
 
-    // ✅ Datos desde OpenWeather
-    const apiKey = "9ee5d7e13cf00cdb7b2696791348f6af"; // ⬅️ tu API key
-    const ciudad = "Buenos Aires,AR";
-    const respAPI = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${apiKey}&units=metric`);
-    const dataAPI = await respAPI.json();
-
-    const velocidad = (dataAPI.wind.speed * 3.6).toFixed(1); // m/s → km/h
-    const direccionGrados = dataAPI.wind.deg;
-    const direccionCardinal = convertirCardinal(direccionGrados);
-
-    document.getElementById("direccionAPI").innerText = `Dirección API: ${direccionGrados}° (${direccionCardinal})`;
-    document.getElementById("velocidadAPI").innerText = `Velocidad: ${velocidad} km/h`;
-
-  } catch (error) {
-    console.error("Error al actualizar viento:", error);
-  }
-}
-
-// ✅ Convierte grados → texto cardinal
-function convertirCardinal(grados) {
-  const rumbos = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
-  const index = Math.round(grados / 22.5) % 16;
-  return rumbos[index];
-}
-async function actualizarViento() {
+   async function actualizarViento() {
   try {
-    // ✅ Datos desde OpenWeather
+    // Datos desde OpenWeather
     const apiKey = "9ee5d7e13cf00cdb7b2696791348f6af"; // tu API key
     const ciudad = "Buenos Aires,AR";
     const respAPI = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${apiKey}&units=metric`);
     const dataAPI = await respAPI.json();
 
     const velocidad = (dataAPI.wind.speed * 3.6).toFixed(1); // m/s → km/h
-    const direccionGrados = dataAPI.wind.deg;
+    const direccionGradosAPI = dataAPI.wind.deg;
+    const direccionCardinalAPI = convertirCardinal(direccionGradosAPI);
 
-    // ✅ Actualizar velocidad
+    //  Actualizar brújula API
+    document.getElementById("flechaAPI").style.transform = `rotate(${direccionGradosAPI}deg)`;
+    document.getElementById("direccionAPI").innerText = `${direccionGradosAPI}° (${direccionCardinalAPI})`;
     document.getElementById("velocidadAPI").innerText = `Velocidad: ${velocidad} km/h`;
 
-    // ✅ Actualizar flecha
-    const flecha = document.getElementById("flecha");
-    flecha.style.transform = `rotate(${direccionGrados}deg)`;
+    // Dirección desde ESP (ThingSpeak field5)
+    const respESP = await fetch("https://api.thingspeak.com/channels/2991138/fields/5/last.json");
+    const dataESP = await respESP.json();
+    const direccionGradosESP = dataESP.field5 ? parseFloat(dataESP.field5) : null;
 
-    // ✅ Texto con cardinal
-    const direccionCardinal = convertirCardinal(direccionGrados);
-    document.getElementById("direccionTexto").innerText = `${direccionGrados}° (${direccionCardinal})`;
+    if (direccionGradosESP !== null) {
+      const direccionCardinalESP = convertirCardinal(direccionGradosESP);
+      document.getElementById("flechaESP").style.transform = `rotate(${direccionGradosESP}deg)`;
+      document.getElementById("direccionESP").innerText = `${direccionGradosESP.toFixed(1)}° (${direccionCardinalESP})`;
+    } else {
+      document.getElementById("direccionESP").innerText = "--";
+    }
 
   } catch (error) {
     console.error("Error al actualizar viento:", error);
   }
 }
 
-// Convierte grados → texto cardinal
 function convertirCardinal(grados) {
   const rumbos = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
   const index = Math.round(grados / 22.5) % 16;
@@ -378,12 +375,11 @@ function convertirCardinal(grados) {
 
 setInterval(actualizarViento, 60000);
 actualizarViento();
-// ✅ Ejecuta cada 60 segundos
-setInterval(actualizarViento, 60000);
-actualizarViento(); // primera vez
+
   </script>
 </body>
 </html>
+
 
 
 
