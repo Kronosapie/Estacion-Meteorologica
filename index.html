@@ -2,384 +2,285 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Estación Meteorológica</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(to bottom, #e0f7fa, #f1f8ff);
-      color: #333;
+    :root{
+      --c1:#00bcd4;      /* primario */
+      --c2:#e0f7fa;      /* fondo degradé */
+      --c3:#f1f8ff;
+      --text:#333;
+      --card:#fff;
     }
-
-    header {
-      background: #00bcd4;
-      color: white;
-      padding: 1.5rem;
-      text-align: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      background: linear-gradient(to bottom, var(--c2), var(--c3));
+      color:var(--text);
     }
-
-    main {
-      max-width: 1000px;
-      margin: auto;
-      padding: 1rem;
+    header{
+      background:var(--c1);
+      color:#fff;
+      padding:1.2rem;
+      text-align:center;
+      box-shadow:0 4px 12px rgba(0,0,0,.1);
     }
-
-    .grafico-container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      padding: 1.5rem;
-      margin: 2rem auto;
+    main{max-width:1000px;margin:auto;padding:1rem}
+    .toolbar{
+      display:flex; gap:.6rem; flex-wrap:wrap; justify-content:center; margin:1rem 0;
     }
-
-    h2 {
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
-      color: #00bcd4;
-      text-align: center;
+    .btn{
+      border:0; background:#fff; color:var(--c1); font-weight:600;
+      padding:.55rem .9rem; border-radius:999px; cursor:pointer;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
     }
-
-    .valor-actual {
-      text-align: center;
-      font-size: 1.3rem;
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 10px;
+    .btn.active{background:var(--c1); color:#fff}
+    .grafico-container{
+      background:var(--card);
+      border-radius:16px;
+      box-shadow:0 4px 12px rgba(0,0,0,.08);
+      padding:1.3rem; margin:1.2rem auto;
     }
-
-    canvas {
-      width: 100% !important;
-      max-height: 340px;
-      height: auto !important;
+    h2{font-size:1.1rem; margin:0 0 .6rem; color:var(--c1); text-align:center}
+    .valor-actual{
+      text-align:center; font-size:1.1rem; font-weight:700; color:#222; margin:.2rem 0 .8rem;
     }
-
-    .modo-selector {
-      text-align: center;
-      margin-top: 1rem;
+    canvas{width:100% !important; max-height:360px; height:auto !important;}
+    /* Brújulas */
+    .wind-wrapper{display:flex; justify-content:center; gap:40px; flex-wrap:wrap}
+    .brujula-container{text-align:center}
+    .brujula{
+      width:160px; height:160px; border:6px solid var(--c1); border-radius:50%;
+      position:relative; background:#f9f9f9; display:flex; justify-content:center; align-items:center;
+      margin:auto;
     }
-
-    button {
-      background-color: #00bcd4;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      margin: 0.5rem;
-      border-radius: 6px;
-      cursor: pointer;
+    .brujula::before{content:"N"; position:absolute; top:6px; font-weight:700; color:#333}
+    .flecha{
+      width:6px; height:78px; background:#ff1744; position:absolute; bottom:50%;
+      transform-origin: bottom center; transform: rotate(0deg);
+      transition: transform .5s ease-in-out;
+      border-radius:4px;
     }
-
-    button.active {
-      background-color: #008c9e;
+    .sub{font-size:.95rem; color:#555}
+    @media (max-width:600px){
+      header h1{font-size:1.2rem}
+      .grafico-container{padding:1rem}
+      canvas{max-height:300px}
     }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 1.3rem;
-      }
-
-      h2 {
-        font-size: 1rem;
-      }
-
-      .grafico-container {
-        padding: 1rem;
-        margin: 1.5rem auto;
-      }
-    }
-    .brujula {
-  width: 150px;
-  height: 150px;
-  border: 6px solid #00bcd4;
-  border-radius: 50%;
-  position: relative;
-  background: #f9f9f9;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.flecha {
-  width: 6px;
-  height: 70px;
-  background: #ff1744;
-  position: absolute;
-  bottom: 50%;
-  transform-origin: bottom center;
-  transform: rotate(0deg);
-  transition: transform 0.5s ease-in-out;
-}
-
-.brujula::before {
-  content: "N";
-  position: absolute;
-  top: 8px;
-  font-weight: bold;
-  color: #333;
-}
-
   </style>
 </head>
 <body>
-
-  <header>
-    <h1>📡 Estación Meteorológica</h1>
-  </header>
+  <header><h1>📡 Estación Meteorológica</h1></header>
 
   <main>
-    <div class="modo-selector">
-      <button id="btnCrudo" class="active">Datos recientes</button>
-      <button id="btnProm">Promedios por hora</button>
+    <!-- Botonera de modo -->
+    <div class="toolbar">
+      <button class="btn active" id="btnRecientes">Datos recientes</button>
+      <button class="btn" id="btnPromedios">Promedios por hora (hoy)</button>
     </div>
 
+    <!-- Temperatura -->
     <div class="grafico-container">
       <h2>🌡️ Temperatura (°C)</h2>
-      <div class="valor-actual" id="valorTemp">--</div>
-      <canvas id="graficoTemp"></canvas>
+      <div class="valor-actual" id="vTemp">--</div>
+      <canvas id="cTemp"></canvas>
     </div>
 
+    <!-- Humedad -->
     <div class="grafico-container">
       <h2>💧 Humedad (%)</h2>
-      <div class="valor-actual" id="valorHum">--</div>
-      <canvas id="graficoHum"></canvas>
+      <div class="valor-actual" id="vHum">--</div>
+      <canvas id="cHum"></canvas>
     </div>
 
+    <!-- Presión -->
     <div class="grafico-container">
       <h2>📏 Presión (hPa)</h2>
-      <div class="valor-actual" id="valorPres">--</div>
-      <canvas id="graficoPres"></canvas>
+      <div class="valor-actual" id="vPres">--</div>
+      <canvas id="cPres"></canvas>
     </div>
 
+    <!-- Altitud -->
     <div class="grafico-container">
       <h2>🏔️ Altitud (m)</h2>
-      <div class="valor-actual" id="valorAlt">--</div>
-      <canvas id="graficoAlt"></canvas>
+      <div class="valor-actual" id="vAlt">--</div>
+      <canvas id="cAlt"></canvas>
     </div>
+
+    <!-- Viento: dos brújulas -->
     <div class="grafico-container">
-
-  <div class="grafico-container" style="text-align:center;">
-  <h2>🌬️ Dirección del Viento</h2>
-  <div style="display:flex; justify-content:center; gap:40px; flex-wrap:wrap;">
-
-    <!-- Brújula API -->
-    <div class="brujula-container">
-      <h3>OpenWeather</h3>
-      <div class="brujula">
-        <div class="flecha" id="flechaAPI"></div>
+      <h2>🌬️ Dirección del viento</h2>
+      <div class="wind-wrapper">
+        <!-- OpenWeather -->
+        <div class="brujula-container">
+          <div class="sub"><strong>OpenWeather</strong></div>
+          <div class="brujula"><div class="flecha" id="flechaAPI"></div></div>
+          <div class="valor-actual" id="dirAPI">--</div>
+          <div class="valor-actual" id="velAPI">Velocidad: -- km/h</div>
+        </div>
+        <!-- Mi estación (ThingSpeak) -->
+        <div class="brujula-container">
+          <div class="sub"><strong>Mi Estación (veleta)</strong></div>
+          <div class="brujula"><div class="flecha" id="flechaESP"></div></div>
+          <div class="valor-actual" id="dirESP">--</div>
+        </div>
       </div>
-      <div class="valor-actual" id="direccionAPI">--</div>
-      <div class="valor-actual" id="velocidadAPI">Velocidad: -- km/h</div>
     </div>
-
-    <!-- Brújula ESP -->
-    <div class="brujula-container">
-      <h3>Mi Estación</h3>
-      <div class="brujula">
-        <div class="flecha" id="flechaESP"></div>
-      </div>
-      <div class="valor-actual" id="direccionESP">--</div>
-    </div>
-
-  </div>
-</div>
-
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const canalID = 2991138;
-    const apiKey = "CQCKW0T4ORH6UR3H";
-    const owApiKey = "9ee5d7e13cf00cdb7b2696791348f6af";
-    const charts = {};
-    let modo = "crudo";
+    // ====== CONFIG ======
+    const canalID   = 2991138;                         // ⬅️ Tu canal
+    const tsReadKey = "CQCKW0T4ORH6UR3H";              // ⬅️ API key de lectura (si tu canal es privado)
+    const apiKeyOW  = "9ee5d7e13cf00cdb7b2696791348f6af"; // ⬅️ OpenWeather
+    const ciudadOW  = "Buenos Aires,AR";
+    const autoRefreshMs = 60000; // refresco 60 s
+    let modo = "recientes"; // 'recientes' | 'promedios'
 
-    const campos = [
-      { id: 1, nombre: "Temperatura (°C)", color: "#ff5252", canvasId: "graficoTemp", ow: "temp" },
-      { id: 3, nombre: "Humedad (%)", color: "#00aaff", canvasId: "graficoHum", ow: "humidity" },
-      { id: 2, nombre: "Presión (hPa)", color: "#00cc66", canvasId: "graficoPres", ow: "pressure" },
-      { id: 4, nombre: "Altitud (m)", color: "#ff8800", canvasId: "graficoAlt" }
+    // Campos ThingSpeak
+    const CAMPOS = [
+      { id:1, nombre:"Temperatura",  canvas:"cTemp", color:"rgba(255,99,132,1)", bg:"rgba(255,99,132,.15)", unidad:"°C", valor:"vTemp" },
+      { id:3, nombre:"Humedad",      canvas:"cHum",  color:"rgba(54,162,235,1)", bg:"rgba(54,162,235,.15)", unidad:"%",  valor:"vHum"  },
+      { id:2, nombre:"Presión",      canvas:"cPres", color:"rgba(255,159,64,1)", bg:"rgba(255,159,64,.15)", unidad:"hPa", valor:"vPres" },
+      { id:4, nombre:"Altitud",      canvas:"cAlt",  color:"rgba(75,192,192,1)", bg:"rgba(75,192,192,.15)", unidad:"m",   valor:"vAlt"  },
     ];
+    // NOTA: invertimos Humedad/Presión si estaban cruzados antes
 
-    document.getElementById("btnCrudo").onclick = () => {
-      modo = "crudo";
-      document.getElementById("btnCrudo").classList.add("active");
-      document.getElementById("btnProm").classList.remove("active");
-      cargarGraficos();
-    };
+    const charts = {}; // para guardar instancias Chart.js
 
-    document.getElementById("btnProm").onclick = () => {
-      modo = "promedio";
-      document.getElementById("btnProm").classList.add("active");
-      document.getElementById("btnCrudo").classList.remove("active");
-      cargarGraficos();
-    };
+    // ====== UTILIDADES ======
+    const two = n => n.toString().padStart(2,'0');
+    function fmtHoraLocal(iso){
+      const d = new Date(iso);
+      return `${two(d.getHours())}:${two(d.getMinutes())}`;
+    }
+    function gradosACardinal(g){
+      const r = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+      return r[Math.round(g/22.5)%16];
+    }
+    function withKey(q){
+      return tsReadKey ? `${q}&api_key=${tsReadKey}` : q;
+    }
 
-    function cargarGraficos() {
-      campos.forEach(campo => {
-        if (modo === "crudo") cargarDatosCrudos(campo);
-        else cargarPromediosHora(campo);
+    // ====== DATOS THINGSPEAK ======
+    async function fetchRecientes(fieldId, n=60){
+      const url = withKey(`https://api.thingspeak.com/channels/${canalID}/fields/${fieldId}.json?results=${n}`);
+      const r = await fetch(url);
+      const j = await r.json();
+      const labels = j.feeds.map(f => fmtHoraLocal(f.created_at));
+      const vals = j.feeds.map(f => parseFloat(f[`field${fieldId}`]));
+      return {labels, vals, raw:j.feeds};
+    }
+
+    async function fetchPromedios(fieldId){
+      // Traemos muchas lecturas del día y promediamos por hora local
+      const url = withKey(`https://api.thingspeak.com/channels/${canalID}/fields/${fieldId}.json?results=288`); // hasta 24h si envías cada 5 min
+      const r = await fetch(url);
+      const j = await r.json();
+      const buckets = {}; // { 'HH': [val,...] }
+      j.feeds.forEach(f=>{
+        const v = parseFloat(f[`field${fieldId}`]);
+        if (isNaN(v)) return;
+        const d = new Date(f.created_at);
+        const hh = two(d.getHours());
+        (buckets[hh] ||= []).push(v);
+      });
+      const labels = Object.keys(buckets).sort();
+      const vals = labels.map(h => {
+        const arr = buckets[h];
+        const prom = arr.reduce((a,b)=>a+b,0)/arr.length;
+        return parseFloat(prom.toFixed(2));
+      });
+      return {labels, vals, raw:j.feeds};
+    }
+
+    // ====== GRAFICAR ======
+    function drawChart(key, labels, data, color, bg, titulo){
+      const ctx = document.getElementById(key).getContext('2d');
+      if (charts[key]) charts[key].destroy();
+      charts[key] = new Chart(ctx,{
+        type:'line',
+        data:{
+          labels,
+          datasets:[{ label: titulo, data, borderColor: color, backgroundColor: bg, tension:.3, fill:true, pointRadius:0 }]
+        },
+        options:{
+          maintainAspectRatio:false,
+          interaction:{mode:'index', intersect:false},
+          scales:{
+            x:{ grid:{display:false} },
+            y:{ grid:{color:'rgba(0,0,0,.06)'} }
+          },
+          plugins:{
+            legend:{display:false},
+            tooltip:{callbacks:{label:(ctx)=>`${ctx.formattedValue}`}}
+          }
+        }
       });
     }
 
-    function cargarDatosCrudos(campo) {
-  fetch(`https://api.thingspeak.com/channels/${canalID}/fields/${campo.id}.json?api_key=${apiKey}&results=60`)
-    .then(r => r.json())
-    .then(data => {
-      const labels = data.feeds.map(f => {
-        const fecha = new Date(f.created_at);
-        return fecha.getHours().toString().padStart(2, '0') + ':' + fecha.getMinutes().toString().padStart(2, '0');
-      });
-
-      const valores = data.feeds.map(f => parseFloat(f[`field${campo.id}`]));
-      const idValor = "valor" + campo.canvasId.replace("grafico", "");
-
-      if (document.getElementById(idValor)) {
-        document.getElementById(idValor).innerText = valores.at(-1).toFixed(1);
+    async function cargarTodo(){
+      for (const c of CAMPOS){
+        try{
+          const pack = (modo==='recientes') ? await fetchRecientes(c.id, 60) : await fetchPromedios(c.id);
+          // Actual valor (último disponible)
+          const last = pack.vals.filter(v=>!isNaN(v)).at(-1);
+          if (last!=null) document.getElementById(c.valor).innerText = `${last} ${c.unidad}`;
+          // Dibujar
+          drawChart(c.canvas, pack.labels, pack.vals, c.color, c.bg, c.nombre);
+        }catch(e){
+          console.error(`Error cargando campo ${c.id}`, e);
+        }
       }
+      actualizarViento(); // también refrescamos viento
+    }
 
-      renderizarGrafico(campo.canvasId, labels, [{
-        label: campo.nombre,
-        data: valores,
-        borderColor: campo.color,
-        backgroundColor: campo.color + "33",
-        fill: true,
-        tension: 0.3
-      }], campo.nombre);
+    // ====== VIENTO (API + ESP) ======
+    async function actualizarViento(){
+      try{
+        // OpenWeather
+        const rOW = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(ciudadOW)}&appid=${apiKeyOW}&units=metric`);
+        const ow = await rOW.json();
+        const velKmH = (ow.wind.speed * 3.6).toFixed(1);
+        const dirAPI = ow.wind.deg;
+        document.getElementById('velAPI').innerText = `Velocidad: ${velKmH} km/h`;
+        document.getElementById('dirAPI').innerText = `${dirAPI}° (${gradosACardinal(dirAPI)})`;
+        document.getElementById('flechaAPI').style.transform = `rotate(${dirAPI}deg)`;
+      }catch(e){ console.error('OW error', e); }
+
+      try{
+        // Dirección desde tu ESP en ThingSpeak (field5, en grados)
+        const url = withKey(`https://api.thingspeak.com/channels/${canalID}/fields/5/last.json`);
+        const rTS = await fetch(url);
+        const ts = await rTS.json();
+        const dirESP = ts.field5 ? parseFloat(ts.field5) : null;
+        if (dirESP!=null && !isNaN(dirESP)){
+          document.getElementById('dirESP').innerText = `${dirESP.toFixed(1)}° (${gradosACardinal(dirESP)})`;
+          document.getElementById('flechaESP').style.transform = `rotate(${dirESP}deg)`;
+        }else{
+          document.getElementById('dirESP').innerText = `--`;
+        }
+      }catch(e){ console.error('TS viento error', e); }
+    }
+
+    // ====== EVENTOS / INIT ======
+    document.getElementById('btnRecientes').addEventListener('click', ()=>{
+      modo='recientes';
+      document.getElementById('btnRecientes').classList.add('active');
+      document.getElementById('btnPromedios').classList.remove('active');
+      cargarTodo();
     });
-}
+    document.getElementById('btnPromedios').addEventListener('click', ()=>{
+      modo='promedios';
+      document.getElementById('btnPromedios').classList.add('active');
+      document.getElementById('btnRecientes').classList.remove('active');
+      cargarTodo();
+    });
 
-    function cargarPromediosHora(campo) {
-      const hoy = new Date();
-      const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0);
-      const formato = d => d.toISOString().split(".")[0] + "Z";
-      const url = `https://api.thingspeak.com/channels/${canalID}/fields/${campo.id}.json?api_key=${apiKey}&start=${formato(inicio)}&end=${formato(hoy)}&results=1000`;
-
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          const porHora = {};
-          data.feeds.forEach(e => {
-            const h = new Date(e.created_at).getHours();
-            const v = parseFloat(e[`field${campo.id}`]);
-            if (!isNaN(v)) {
-              if (!porHora[h]) porHora[h] = [];
-              porHora[h].push(v);
-            }
-          });
-          const labels = [];
-          const datos = [];
-          for (let h = 0; h <= hoy.getHours(); h++) {
-            const hs = porHora[h] || [];
-            if (hs.length) {
-              labels.push(h.toString().padStart(2, '0') + ":00");
-              datos.push((hs.reduce((a, b) => a + b) / hs.length).toFixed(2));
-            }
-          }
-          document.getElementById("valor" + campo.canvasId.replace("grafico", "")).innerText = datos.at(-1);
-
-          if (campo.ow) {
-            fetch(`https://api.openweathermap.org/data/2.5/weather?q=Buenos+Aires,AR&appid=${owApiKey}&units=metric`)
-              .then(r => r.json())
-              .then(ow => {
-                const owVal = parseFloat(ow.main[campo.ow]);
-                renderizarGrafico(campo.canvasId, labels, [
-                  { label: campo.nombre, data: datos, borderColor: campo.color, backgroundColor: campo.color + "33", fill: true, tension: 0.3 },
-                  { label: "OpenWeather", data: Array(datos.length).fill(owVal), borderColor: "#666", borderDash: [5, 5], pointRadius: 0 }
-                ], campo.nombre);
-              });
-          } else {
-            renderizarGrafico(campo.canvasId, labels, [
-              { label: campo.nombre, data: datos, borderColor: campo.color, backgroundColor: campo.color + "33", fill: true, tension: 0.3 }
-            ], campo.nombre);
-          }
-        });
-    }
-
-    function renderizarGrafico(canvasId, labels, datasets, titulo) {
-      const ctx = document.getElementById(canvasId).getContext("2d");
-      if (charts[canvasId]) {
-        charts[canvasId].data.labels = labels;
-        charts[canvasId].data.datasets = datasets;
-        charts[canvasId].update();
-      } else {
-        charts[canvasId] = new Chart(ctx, {
-          type: "line",
-          data: { labels, datasets },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { display: true },
-              title: { display: false }
-            },
-            scales: {
-              x: { title: { display: true, text: "Hora" } },
-              y: { beginAtZero: false, title: { display: true, text: titulo } }
-            }
-          }
-        });
-      }
-    }
-
-    cargarGraficos();
-    setInterval(cargarGraficos, 5 * 60 * 1000);
-    async function actualizarViento() {
-  try {
-    //  Dirección local desde ThingSpeak (field5)
-    const respLocal = await fetch("https://api.thingspeak.com/channels/2991138/fields/5/last.json");
-    const dataLocal = await respLocal.json();
-    const direccionLocal = dataLocal.field5 ? `${dataLocal.field5}°` : "--";
-    document.getElementById("direccionLocal").innerText = `Dirección local: ${direccionLocal}`;
-
-   async function actualizarViento() {
-  try {
-    // Datos desde OpenWeather
-    const apiKey = "9ee5d7e13cf00cdb7b2696791348f6af"; // tu API key
-    const ciudad = "Buenos Aires,AR";
-    const respAPI = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${apiKey}&units=metric`);
-    const dataAPI = await respAPI.json();
-
-    const velocidad = (dataAPI.wind.speed * 3.6).toFixed(1); // m/s → km/h
-    const direccionGradosAPI = dataAPI.wind.deg;
-    const direccionCardinalAPI = convertirCardinal(direccionGradosAPI);
-
-    //  Actualizar brújula API
-    document.getElementById("flechaAPI").style.transform = `rotate(${direccionGradosAPI}deg)`;
-    document.getElementById("direccionAPI").innerText = `${direccionGradosAPI}° (${direccionCardinalAPI})`;
-    document.getElementById("velocidadAPI").innerText = `Velocidad: ${velocidad} km/h`;
-
-    // Dirección desde ESP (ThingSpeak field5)
-    const respESP = await fetch("https://api.thingspeak.com/channels/2991138/fields/5/last.json");
-    const dataESP = await respESP.json();
-    const direccionGradosESP = dataESP.field5 ? parseFloat(dataESP.field5) : null;
-
-    if (direccionGradosESP !== null) {
-      const direccionCardinalESP = convertirCardinal(direccionGradosESP);
-      document.getElementById("flechaESP").style.transform = `rotate(${direccionGradosESP}deg)`;
-      document.getElementById("direccionESP").innerText = `${direccionGradosESP.toFixed(1)}° (${direccionCardinalESP})`;
-    } else {
-      document.getElementById("direccionESP").innerText = "--";
-    }
-
-  } catch (error) {
-    console.error("Error al actualizar viento:", error);
-  }
-}
-
-function convertirCardinal(grados) {
-  const rumbos = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
-  const index = Math.round(grados / 22.5) % 16;
-  return rumbos[index];
-}
-
-setInterval(actualizarViento, 60000);
-actualizarViento();
-
+    cargarTodo();
+    setInterval(cargarTodo, autoRefreshMs);
   </script>
 </body>
 </html>
-
-
-
-
