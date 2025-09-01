@@ -128,7 +128,15 @@
   const ciudad = "Buenos Aires";
   const updateInterval = 60000; // 1 min
 
-  // Configuración de gráficos con dos datasets
+  // Función para crear degradados
+  function crearGradiente(ctx, color1, color2) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, color1);
+    gradient.addColorStop(1, color2);
+    return gradient;
+  }
+
+  // Configuración de gráficos
   const ctxTemp = document.getElementById('graficoTemp').getContext('2d');
   const ctxHum = document.getElementById('graficoHum').getContext('2d');
   const ctxPres = document.getElementById('graficoPres').getContext('2d');
@@ -138,11 +146,32 @@
     data: {
       labels: [],
       datasets: [
-        { label: 'Estación', data: [], borderColor: '#ff5722', fill: false },
-        { label: 'API', data: [], borderColor: '#2196f3', borderDash: [5, 5], fill: false }
+        { 
+          label: 'Estación', 
+          data: [], 
+          borderColor: '#ff5722', 
+          backgroundColor: crearGradiente(ctxTemp, 'rgba(255,87,34,0.4)', 'rgba(255,87,34,0.05)'),
+          fill: true, tension: 0.4, borderWidth: 3
+        },
+        { 
+          label: 'API', 
+          data: [], 
+          borderColor: '#2196f3', 
+          backgroundColor: crearGradiente(ctxTemp, 'rgba(33,150,243,0.3)', 'rgba(33,150,243,0.05)'),
+          fill: true, tension: 0.4, borderWidth: 3, borderDash: [6, 6]
+        }
       ]
     },
-    options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { font: { size: 14 }, color: '#333' } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 12 }, color: '#555' } },
+        y: { ticks: { font: { size: 12 }, color: '#555' } }
+      }
+    }
   });
 
   const graficoHum = new Chart(ctxHum, {
@@ -150,11 +179,32 @@
     data: {
       labels: [],
       datasets: [
-        { label: 'Estación', data: [], borderColor: '#03a9f4', fill: false },
-        { label: 'API', data: [], borderColor: '#9c27b0', borderDash: [5, 5], fill: false }
+        { 
+          label: 'Estación', 
+          data: [], 
+          borderColor: '#03a9f4', 
+          backgroundColor: crearGradiente(ctxHum, 'rgba(3,169,244,0.4)', 'rgba(3,169,244,0.05)'),
+          fill: true, tension: 0.4, borderWidth: 3
+        },
+        { 
+          label: 'API', 
+          data: [], 
+          borderColor: '#9c27b0', 
+          backgroundColor: crearGradiente(ctxHum, 'rgba(156,39,176,0.3)', 'rgba(156,39,176,0.05)'),
+          fill: true, tension: 0.4, borderWidth: 3, borderDash: [6, 6]
+        }
       ]
     },
-    options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { font: { size: 14 }, color: '#333' } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 12 }, color: '#555' } },
+        y: { ticks: { font: { size: 12 }, color: '#555' } }
+      }
+    }
   });
 
   const graficoPres = new Chart(ctxPres, {
@@ -162,58 +212,39 @@
     data: {
       labels: [],
       datasets: [
-        { label: 'Estación', data: [], borderColor: '#4caf50', fill: false },
-        { label: 'API', data: [], borderColor: '#ff9800', borderDash: [5, 5], fill: false }
+        { 
+          label: 'Estación', 
+          data: [], 
+          borderColor: '#4caf50', 
+          backgroundColor: crearGradiente(ctxPres, 'rgba(76,175,80,0.4)', 'rgba(76,175,80,0.05)'),
+          fill: true, tension: 0.4, borderWidth: 3
+        },
+        { 
+          label: 'API', 
+          data: [], 
+          borderColor: '#ff9800', 
+          backgroundColor: crearGradiente(ctxPres, 'rgba(255,152,0,0.3)', 'rgba(255,152,0,0.05)'),
+          fill: true, tension: 0.4, borderWidth: 3, borderDash: [6, 6]
+        }
       ]
     },
-    options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { font: { size: 14 }, color: '#333' } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 12 }, color: '#555' } },
+        y: { ticks: { font: { size: 12 }, color: '#555' } }
+      }
+    }
   });
 
+  // Funciones auxiliares para brújulas y actualización de datos
   function gradosACardinal(grados) {
     const direcciones = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
     let idx = Math.round(grados / 22.5) % 16;
     return direcciones[idx];
-  }
-
-  function dibujarBrujula(ctx, angulo, color) {
-    ctx.clearRect(0, 0, 150, 150);
-    ctx.beginPath();
-    ctx.arc(75, 75, 70, 0, 2 * Math.PI);
-    ctx.strokeStyle = "#00bcd4";
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    ctx.font = "12px Arial";
-    ctx.fillStyle = "#333";
-    ctx.fillText("N", 70, 15);
-    ctx.fillText("S", 70, 145);
-    ctx.fillText("E", 135, 80);
-    ctx.fillText("O", 10, 80);
-
-    ctx.save();
-    ctx.translate(75, 75);
-    ctx.rotate((angulo * Math.PI) / 180);
-    ctx.beginPath();
-    ctx.moveTo(0, -50);
-    ctx.lineTo(0, 10);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  let ctxApi = document.getElementById('brujulaApi').getContext('2d');
-  let ctxEst = document.getElementById('brujulaEstacion').getContext('2d');
-
-  function actualizarBrujulas(apiDir, apiVel, estDir, estVel) {
-    dibujarBrujula(ctxApi, apiDir, "blue");
-    dibujarBrujula(ctxEst, estDir, "green");
-
-    document.getElementById('valorApiDir').innerText = gradosACardinal(apiDir);
-    document.getElementById('valorEstacionDir').innerText = gradosACardinal(estDir);
-
-    document.getElementById('valorApiVel').innerText = "Velocidad: " + apiVel.toFixed(1) + " km/h";
-    document.getElementById('valorEstacionVel').innerText = "Velocidad: " + estVel.toFixed(1) + " km/h";
   }
 
   async function actualizarDatos() {
@@ -239,19 +270,14 @@
     document.getElementById('valorHum').innerText = hums[hums.length - 1].toFixed(1) + " %";
     document.getElementById('valorPres').innerText = pres[pres.length - 1].toFixed(1) + " hPa";
 
-    let estDir = parseFloat(dataTS.feeds[dataTS.feeds.length - 1].field5) || 0;
-    let estVel = parseFloat(dataTS.feeds[dataTS.feeds.length - 1].field6) || 0;
-
     // Datos de la API OpenWeather
     const resAPI = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${openWeatherAPI}&units=metric`);
     const dataAPI = await resAPI.json();
     let apiTemp = dataAPI.main.temp;
     let apiHum = dataAPI.main.humidity;
     let apiPres = dataAPI.main.pressure;
-    let apiDir = dataAPI.wind.deg;
-    let apiVel = dataAPI.wind.speed * 3.6;
 
-    // Agregar la línea plana de API (repite el mismo valor)
+    // Agregar la línea plana de API
     graficoTemp.data.datasets[1].data = Array(labels.length).fill(apiTemp);
     graficoHum.data.datasets[1].data = Array(labels.length).fill(apiHum);
     graficoPres.data.datasets[1].data = Array(labels.length).fill(apiPres);
@@ -259,8 +285,6 @@
     graficoTemp.update();
     graficoHum.update();
     graficoPres.update();
-
-    actualizarBrujulas(apiDir, apiVel, estDir, estVel);
   }
 
   setInterval(actualizarDatos, updateInterval);
@@ -268,6 +292,8 @@
 </script>
 
 
+
 </body>
 </html>
+
 
