@@ -343,12 +343,13 @@
   }
 
   // Valores iniciales simulados
-  actualizarBrujulas(120, 12.5, 250, 8.2);
+  actualizarBrujulas(apiData.wind.deg, apiData.wind.speed * 3.6, parseFloat(datosThingSpeak.field5), parseFloat(datosThingSpeak.field6));
 
 
 </script>
 </body>
 </html>
+
 
 
 
