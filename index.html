@@ -2,300 +2,155 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Estación Meteorológica</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root{
-      --c1:#00bcd4;      /* primario */
-      --c2:#e0f7fa;      /* fondo degradé */
-      --c3:#f1f8ff;
-      --text:#333;
-      --card:#fff;
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(to bottom, #e0f7fa, #f1f8ff);
+      color: #333;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-      background: linear-gradient(to bottom, var(--c2), var(--c3));
-      color:var(--text);
-    }
-    header{
-      background:var(--c1);
-      color:#fff;
-      padding:1.2rem;
-      text-align:center;
-      box-shadow:0 4px 12px rgba(0,0,0,.1);
-    }
-    main{max-width:1000px;margin:auto;padding:1rem}
-    .toolbar{
-      display:flex; gap:.6rem; flex-wrap:wrap; justify-content:center; margin:1rem 0;
-    }
-    .btn{
-      border:0; background:#fff; color:var(--c1); font-weight:600;
-      padding:.55rem .9rem; border-radius:999px; cursor:pointer;
-      box-shadow:0 2px 8px rgba(0,0,0,.08);
-    }
-    .btn.active{background:var(--c1); color:#fff}
-    .grafico-container{
-      background:var(--card);
-      border-radius:16px;
-      box-shadow:0 4px 12px rgba(0,0,0,.08);
-      padding:1.3rem; margin:1.2rem auto;
-    }
-    h2{font-size:1.1rem; margin:0 0 .6rem; color:var(--c1); text-align:center}
-    .valor-actual{
-      text-align:center; font-size:1.1rem; font-weight:700; color:#222; margin:.2rem 0 .8rem;
-    }
-    canvas{width:100% !important; max-height:360px; height:auto !important;}
-    /* Brújulas */
-    .wind-wrapper{display:flex; justify-content:center; gap:40px; flex-wrap:wrap}
-    .brujula-container{text-align:center}
-    .brujula{
-      width:160px; height:160px; border:6px solid var(--c1); border-radius:50%;
-      position:relative; background:#f9f9f9; display:flex; justify-content:center; align-items:center;
-      margin:auto;
-    }
-    .brujula::before{content:"N"; position:absolute; top:6px; font-weight:700; color:#333}
-    .flecha{
-      width:6px; height:78px; background:#ff1744; position:absolute; bottom:50%;
-      transform-origin: bottom center; transform: rotate(0deg);
-      transition: transform .5s ease-in-out;
-      border-radius:4px;
-    }
-    .sub{font-size:.95rem; color:#555}
-    @media (max-width:600px){
-      header h1{font-size:1.2rem}
-      .grafico-container{padding:1rem}
-      canvas{max-height:300px}
-    }
-    .grafico-container canvas {
-  margin-bottom: 10px;
-}
 
-.valor-actual {
-  font-size: 1rem;
-  font-weight: normal;
-}
+    header {
+      background: #00bcd4;
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    main {
+      max-width: 1000px;
+      margin: auto;
+      padding: 1rem;
+    }
+
+    .grafico-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+      margin: 1.5rem auto;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #00bcd4;
+      text-align: center;
+    }
+
+    .valor-actual {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    canvas {
+      width: 100% !important;
+      max-height: 340px;
+      height: auto !important;
+    }
+
+    .brujulas {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+
+    .brujulas div {
+      text-align: center;
+      margin: 10px;
+    }
+
+    .brujulas canvas {
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .brujulas {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
   </style>
 </head>
 <body>
-  <header><h1>📡 Estación Meteorológica</h1></header>
 
-  <main>
-    <!-- Botonera de modo -->
-    <div class="toolbar">
-      <button class="btn active" id="btnRecientes">Datos recientes</button>
-      <button class="btn" id="btnPromedios">Promedios por hora (hoy)</button>
-    </div>
+<header>
+  <h1>📡 Estación Meteorológica</h1>
+</header>
 
-    <!-- Temperatura -->
-    <div class="grafico-container">
-      <h2> Temperatura (°C)</h2>
-      <div class="valor-actual" id="vTemp">--</div>
-      <canvas id="cTemp"></canvas>
-    </div>
-
-    <!-- Humedad -->
-    <div class="grafico-container">
-      <h2> Humedad (%)</h2>
-      <div class="valor-actual" id="vHum">--</div>
-      <canvas id="cHum"></canvas>
-    </div>
-
-    <!-- Presión -->
-    <div class="grafico-container">
-      <h2> Presión (hPa)</h2>
-      <div class="valor-actual" id="vPres">--</div>
-      <canvas id="cPres"></canvas>
-    </div>
-
-    <!-- Altitud -->
-    <div class="grafico-container">
-      <h2> Altitud (m)</h2>
-      <div class="valor-actual" id="vAlt">--</div>
-      <canvas id="cAlt"></canvas>
-    </div>
+<main>
+  <div class="grafico-container">
+    <h2>🌡️ Temperatura (°C)</h2>
+    <div class="valor-actual" id="valorTemp">--</div>
+    <canvas id="graficoTemp"></canvas>
+  </div>
 
   <div class="grafico-container">
-  <h2>🌬️ Dirección y Velocidad del Viento</h2>
-  <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
-    
-    <!-- Brújula API -->
-    <div style="text-align: center;">
-      <canvas id="brujulaApi" width="150" height="150"></canvas>
-      <div class="valor-actual" id="valorApiDir">--</div>
-      <div class="valor-actual" id="valorApiVel">Velocidad: -- km/h</div>
-    </div>
-
-    <!-- Brújula Estación -->
-    <div style="text-align: center;">
-      <canvas id="brujulaEstacion" width="150" height="150"></canvas>
-      <div class="valor-actual" id="valorEstacionDir">--</div>
-      <div class="valor-actual" id="valorEstacionVel">Velocidad: -- km/h</div>
-    </div>
-
+    <h2>💧 Humedad (%)</h2>
+    <div class="valor-actual" id="valorHum">--</div>
+    <canvas id="graficoHum"></canvas>
   </div>
-</div>
-  </main>
 
-  <script>
-    // ====== CONFIG ======
-    const canalID   = 2991138;                         //   canal
-    const tsReadKey = "CQCKW0T4ORH6UR3H";              //  API key de lectura 
-    const apiKeyOW  = "9ee5d7e13cf00cdb7b2696791348f6af"; // OpenWeather
-    const ciudadOW  = "Buenos Aires,AR";
-    const autoRefreshMs = 60000; // refresco 60 s
-    let modo = "recientes"; // 'recientes' | 'promedios'
+  <div class="grafico-container">
+    <h2>📏 Presión (hPa)</h2>
+    <div class="valor-actual" id="valorPres">--</div>
+    <canvas id="graficoPres"></canvas>
+  </div>
 
-    // Campos ThingSpeak
-    const CAMPOS = [
-      { id:1, nombre:"Temperatura",  canvas:"cTemp", color:"rgba(255,99,132,1)", bg:"rgba(255,99,132,.15)", unidad:"°C", valor:"vTemp" },
-      { id:3, nombre:"Humedad",      canvas:"cHum",  color:"rgba(54,162,235,1)", bg:"rgba(54,162,235,.15)", unidad:"%",  valor:"vHum"  },
-      { id:2, nombre:"Presión",      canvas:"cPres", color:"rgba(255,159,64,1)", bg:"rgba(255,159,64,.15)", unidad:"hPa", valor:"vPres" },
-      { id:4, nombre:"Altitud",      canvas:"cAlt",  color:"rgba(75,192,192,1)", bg:"rgba(75,192,192,.15)", unidad:"m",   valor:"vAlt"  },
-    ];
-    // NOTA: invertimos Humedad/Presión si estaban cruzados antes
+  <div class="grafico-container">
+    <h2>🌬️ Dirección y Velocidad del Viento</h2>
+    <div class="brujulas">
+      <div>
+        <canvas id="brujulaApi" width="150" height="150"></canvas>
+        <div class="valor-actual" id="valorApiDir">--</div>
+        <div class="valor-actual" id="valorApiVel">Velocidad: -- km/h</div>
+      </div>
+      <div>
+        <canvas id="brujulaEstacion" width="150" height="150"></canvas>
+        <div class="valor-actual" id="valorEstacionDir">--</div>
+        <div class="valor-actual" id="valorEstacionVel">Velocidad: -- km/h</div>
+      </div>
+    </div>
+  </div>
+</main>
 
-    const charts = {}; // para guardar instancias Chart.js
+<script>
+  const channelID = 2991138;
+  const readAPIKey = "CQCKW0T4ORH6UR3H";
+  const openWeatherAPI = "9ee5d7e13cf00cdb7b2696791348f6af";
+  const ciudad = "Buenos Aires";
+  const updateInterval = 60000; // 1 min
 
-    // ====== UTILIDADES ======
-    const two = n => n.toString().padStart(2,'0');
-    function fmtHoraLocal(iso){
-      const d = new Date(iso);
-      return `${two(d.getHours())}:${two(d.getMinutes())}`;
-    }
-    function gradosACardinal(g){
-      const r = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
-      return r[Math.round(g/22.5)%16];
-    }
-    function withKey(q){
-      return tsReadKey ? `${q}&api_key=${tsReadKey}` : q;
-    }
+  // Configuración de gráficos
+  const ctxTemp = document.getElementById('graficoTemp').getContext('2d');
+  const ctxHum = document.getElementById('graficoHum').getContext('2d');
+  const ctxPres = document.getElementById('graficoPres').getContext('2d');
 
-    // ====== DATOS THINGSPEAK ======
-    async function fetchRecientes(fieldId, n=60){
-      const url = withKey(`https://api.thingspeak.com/channels/${canalID}/fields/${fieldId}.json?results=${n}`);
-      const r = await fetch(url);
-      const j = await r.json();
-      const labels = j.feeds.map(f => fmtHoraLocal(f.created_at));
-      const vals = j.feeds.map(f => parseFloat(f[`field${fieldId}`]));
-      return {labels, vals, raw:j.feeds};
-    }
+  const graficoTemp = new Chart(ctxTemp, {
+    type: 'line',
+    data: { labels: [], datasets: [{ label: 'Temperatura', data: [], borderColor: '#ff5722', fill: false }] },
+    options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
+  });
 
-    async function fetchPromedios(fieldId){
-      // Traemos muchas lecturas del día y promediamos por hora local
-      const url = withKey(`https://api.thingspeak.com/channels/${canalID}/fields/${fieldId}.json?results=288`); // hasta 24h si envías cada 5 min
-      const r = await fetch(url);
-      const j = await r.json();
-      const buckets = {}; // { 'HH': [val,...] }
-      j.feeds.forEach(f=>{
-        const v = parseFloat(f[`field${fieldId}`]);
-        if (isNaN(v)) return;
-        const d = new Date(f.created_at);
-        const hh = two(d.getHours());
-        (buckets[hh] ||= []).push(v);
-      });
-      const labels = Object.keys(buckets).sort();
-      const vals = labels.map(h => {
-        const arr = buckets[h];
-        const prom = arr.reduce((a,b)=>a+b,0)/arr.length;
-        return parseFloat(prom.toFixed(2));
-      });
-      return {labels, vals, raw:j.feeds};
-    }
+  const graficoHum = new Chart(ctxHum, {
+    type: 'line',
+    data: { labels: [], datasets: [{ label: 'Humedad', data: [], borderColor: '#03a9f4', fill: false }] },
+    options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
+  });
 
-    // ====== GRAFICAR ======
-    function drawChart(key, labels, data, color, bg, titulo){
-      const ctx = document.getElementById(key).getContext('2d');
-      if (charts[key]) charts[key].destroy();
-      charts[key] = new Chart(ctx,{
-        type:'line',
-        data:{
-          labels,
-          datasets:[{ label: titulo, data, borderColor: color, backgroundColor: bg, tension:.3, fill:true, pointRadius:0 }]
-        },
-        options:{
-          maintainAspectRatio:false,
-          interaction:{mode:'index', intersect:false},
-          scales:{
-            x:{ grid:{display:false} },
-            y:{ grid:{color:'rgba(0,0,0,.06)'} }
-          },
-          plugins:{
-            legend:{display:false},
-            tooltip:{callbacks:{label:(ctx)=>`${ctx.formattedValue}`}}
-          }
-        }
-      });
-    }
+  const graficoPres = new Chart(ctxPres, {
+    type: 'line',
+    data: { labels: [], datasets: [{ label: 'Presión', data: [], borderColor: '#4caf50', fill: false }] },
+    options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
+  });
 
-    async function cargarTodo(){
-      for (const c of CAMPOS){
-        try{
-          const pack = (modo==='recientes') ? await fetchRecientes(c.id, 60) : await fetchPromedios(c.id);
-          // Actual valor (último disponible)
-          const last = pack.vals.filter(v=>!isNaN(v)).at(-1);
-          if (last!=null) document.getElementById(c.valor).innerText = `${last} ${c.unidad}`;
-          // Dibujar
-          drawChart(c.canvas, pack.labels, pack.vals, c.color, c.bg, c.nombre);
-        }catch(e){
-          console.error(`Error cargando campo ${c.id}`, e);
-        }
-      }
-      actualizarViento(); // también refrescamos viento
-    }
-
-    // ====== VIENTO (API + ESP) ======
-    async function actualizarViento(){
-      try{
-        // OpenWeather
-        const rOW = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(ciudadOW)}&appid=${apiKeyOW}&units=metric`);
-        const ow = await rOW.json();
-        const velKmH = (ow.wind.speed * 3.6).toFixed(1);
-        const dirAPI = ow.wind.deg;
-        document.getElementById('velAPI').innerText = `Velocidad: ${velKmH} km/h`;
-        document.getElementById('dirAPI').innerText = `${dirAPI}° (${gradosACardinal(dirAPI)})`;
-        document.getElementById('flechaAPI').style.transform = `rotate(${dirAPI}deg)`;
-      }catch(e){ console.error('OW error', e); }
-
-      try{
-        // Dirección desde tu ESP en ThingSpeak (field5, en grados)
-        const url = withKey(`https://api.thingspeak.com/channels/${canalID}/fields/5/last.json`);
-        const rTS = await fetch(url);
-        const ts = await rTS.json();
-        const dirESP = ts.field5 ? parseFloat(ts.field5) : null;
-        if (dirESP!=null && !isNaN(dirESP)){
-          document.getElementById('dirESP').innerText = `${dirESP.toFixed(1)}° (${gradosACardinal(dirESP)})`;
-          document.getElementById('flechaESP').style.transform = `rotate(${dirESP}deg)`;
-        }else{
-          document.getElementById('dirESP').innerText = `--`;
-        }
-      }catch(e){ console.error('TS viento error', e); }
-    }
-
-    // ====== EVENTOS / INIT ======
-    document.getElementById('btnRecientes').addEventListener('click', ()=>{
-      modo='recientes';
-      document.getElementById('btnRecientes').classList.add('active');
-      document.getElementById('btnPromedios').classList.remove('active');
-      cargarTodo();
-    });
-    document.getElementById('btnPromedios').addEventListener('click', ()=>{
-      modo='promedios';
-      document.getElementById('btnPromedios').classList.add('active');
-      document.getElementById('btnRecientes').classList.remove('active');
-      cargarTodo();
-    });
-
-    cargarTodo();
-    setInterval(cargarTodo, autoRefreshMs);
-  </script>
-  <script>
-  let ctxApi = document.getElementById('brujulaApi').getContext('2d');
-  let ctxEst = document.getElementById('brujulaEstacion').getContext('2d');
-
-  // Función para convertir grados en punto cardinal
   function gradosACardinal(grados) {
     const direcciones = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
     let idx = Math.round(grados / 22.5) % 16;
@@ -310,7 +165,6 @@
     ctx.lineWidth = 4;
     ctx.stroke();
 
-    // Marcas cardinales
     ctx.font = "12px Arial";
     ctx.fillStyle = "#333";
     ctx.fillText("N", 70, 15);
@@ -318,7 +172,6 @@
     ctx.fillText("E", 135, 80);
     ctx.fillText("O", 10, 80);
 
-    // Aguja
     ctx.save();
     ctx.translate(75, 75);
     ctx.rotate((angulo * Math.PI) / 180);
@@ -331,6 +184,9 @@
     ctx.restore();
   }
 
+  let ctxApi = document.getElementById('brujulaApi').getContext('2d');
+  let ctxEst = document.getElementById('brujulaEstacion').getContext('2d');
+
   function actualizarBrujulas(apiDir, apiVel, estDir, estVel) {
     dibujarBrujula(ctxApi, apiDir, "blue");
     dibujarBrujula(ctxEst, estDir, "green");
@@ -342,14 +198,47 @@
     document.getElementById('valorEstacionVel').innerText = "Velocidad: " + estVel.toFixed(1) + " km/h";
   }
 
-  // Valores iniciales simulados
-  actualizarBrujulas(apiData.wind.deg, apiData.wind.speed * 3.6, parseFloat(datosThingSpeak.field5), parseFloat(datosThingSpeak.field6));
+  async function actualizarDatos() {
+    // Datos de la estación
+    const resTS = await fetch(`https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${readAPIKey}&results=10`);
+    const dataTS = await resTS.json();
 
+    const labels = dataTS.feeds.map(feed => new Date(feed.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+    const temps = dataTS.feeds.map(feed => parseFloat(feed.field1));
+    const hums = dataTS.feeds.map(feed => parseFloat(feed.field3));
+    const pres = dataTS.feeds.map(feed => parseFloat(feed.field2));
 
+    graficoTemp.data.labels = labels;
+    graficoTemp.data.datasets[0].data = temps;
+    graficoTemp.update();
+
+    graficoHum.data.labels = labels;
+    graficoHum.data.datasets[0].data = hums;
+    graficoHum.update();
+
+    graficoPres.data.labels = labels;
+    graficoPres.data.datasets[0].data = pres;
+    graficoPres.update();
+
+    document.getElementById('valorTemp').innerText = temps[temps.length - 1].toFixed(1) + " °C";
+    document.getElementById('valorHum').innerText = hums[hums.length - 1].toFixed(1) + " %";
+    document.getElementById('valorPres').innerText = pres[pres.length - 1].toFixed(1) + " hPa";
+
+    let estDir = parseFloat(dataTS.feeds[dataTS.feeds.length - 1].field5) || 0;
+    let estVel = parseFloat(dataTS.feeds[dataTS.feeds.length - 1].field6) || 0;
+
+    // Datos de la API OpenWeather
+    const resAPI = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${openWeatherAPI}&units=metric`);
+    const dataAPI = await resAPI.json();
+    let apiDir = dataAPI.wind.deg;
+    let apiVel = dataAPI.wind.speed * 3.6;
+
+    actualizarBrujulas(apiDir, apiVel, estDir, estVel);
+  }
+
+  setInterval(actualizarDatos, updateInterval);
+  actualizarDatos();
 </script>
+
 </body>
 </html>
-
-
-
-
