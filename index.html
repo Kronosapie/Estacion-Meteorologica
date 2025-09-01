@@ -128,26 +128,44 @@
   const ciudad = "Buenos Aires";
   const updateInterval = 60000; // 1 min
 
-  // Configuración de gráficos
+  // Configuración de gráficos con dos datasets
   const ctxTemp = document.getElementById('graficoTemp').getContext('2d');
   const ctxHum = document.getElementById('graficoHum').getContext('2d');
   const ctxPres = document.getElementById('graficoPres').getContext('2d');
 
   const graficoTemp = new Chart(ctxTemp, {
     type: 'line',
-    data: { labels: [], datasets: [{ label: 'Temperatura', data: [], borderColor: '#ff5722', fill: false }] },
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Estación', data: [], borderColor: '#ff5722', fill: false },
+        { label: 'API', data: [], borderColor: '#2196f3', borderDash: [5, 5], fill: false }
+      ]
+    },
     options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
   });
 
   const graficoHum = new Chart(ctxHum, {
     type: 'line',
-    data: { labels: [], datasets: [{ label: 'Humedad', data: [], borderColor: '#03a9f4', fill: false }] },
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Estación', data: [], borderColor: '#03a9f4', fill: false },
+        { label: 'API', data: [], borderColor: '#9c27b0', borderDash: [5, 5], fill: false }
+      ]
+    },
     options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
   });
 
   const graficoPres = new Chart(ctxPres, {
     type: 'line',
-    data: { labels: [], datasets: [{ label: 'Presión', data: [], borderColor: '#4caf50', fill: false }] },
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Estación', data: [], borderColor: '#4caf50', fill: false },
+        { label: 'API', data: [], borderColor: '#ff9800', borderDash: [5, 5], fill: false }
+      ]
+    },
     options: { responsive: true, scales: { x: { display: true }, y: { beginAtZero: false } } }
   });
 
@@ -199,7 +217,7 @@
   }
 
   async function actualizarDatos() {
-    // Datos de la estación
+    // Datos de la estación (ThingSpeak)
     const resTS = await fetch(`https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${readAPIKey}&results=10`);
     const dataTS = await resTS.json();
 
@@ -210,15 +228,12 @@
 
     graficoTemp.data.labels = labels;
     graficoTemp.data.datasets[0].data = temps;
-    graficoTemp.update();
 
     graficoHum.data.labels = labels;
     graficoHum.data.datasets[0].data = hums;
-    graficoHum.update();
 
     graficoPres.data.labels = labels;
     graficoPres.data.datasets[0].data = pres;
-    graficoPres.update();
 
     document.getElementById('valorTemp').innerText = temps[temps.length - 1].toFixed(1) + " °C";
     document.getElementById('valorHum').innerText = hums[hums.length - 1].toFixed(1) + " %";
@@ -230,8 +245,20 @@
     // Datos de la API OpenWeather
     const resAPI = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${openWeatherAPI}&units=metric`);
     const dataAPI = await resAPI.json();
+    let apiTemp = dataAPI.main.temp;
+    let apiHum = dataAPI.main.humidity;
+    let apiPres = dataAPI.main.pressure;
     let apiDir = dataAPI.wind.deg;
     let apiVel = dataAPI.wind.speed * 3.6;
+
+    // Agregar la línea plana de API (repite el mismo valor)
+    graficoTemp.data.datasets[1].data = Array(labels.length).fill(apiTemp);
+    graficoHum.data.datasets[1].data = Array(labels.length).fill(apiHum);
+    graficoPres.data.datasets[1].data = Array(labels.length).fill(apiPres);
+
+    graficoTemp.update();
+    graficoHum.update();
+    graficoPres.update();
 
     actualizarBrujulas(apiDir, apiVel, estDir, estVel);
   }
@@ -240,5 +267,7 @@
   actualizarDatos();
 </script>
 
+
 </body>
 </html>
+
