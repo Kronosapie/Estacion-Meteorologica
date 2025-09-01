@@ -109,25 +109,18 @@
       <canvas id="cAlt"></canvas>
     </div>
 
-    <!-- Viento: dos brújulas -->
-    <div class="grafico-container">
-      <h2> Dirección del viento</h2>
-      <div class="wind-wrapper">
-        <!-- OpenWeather -->
-        <div class="brujula-container">
-          <div class="sub"><strong>OpenWeather</strong></div>
-          <div class="brujula"><div class="flecha" id="flechaAPI"></div></div>
-          <div class="valor-actual" id="dirAPI">--</div>
-          <div class="valor-actual" id="velAPI">Velocidad: -- km/h</div>
-        </div>
-        <!-- Mi estación (ThingSpeak) -->
-        <div class="brujula-container">
-          <div class="sub"><strong>Mi Estación (veleta)</strong></div>
-          <div class="brujula"><div class="flecha" id="flechaESP"></div></div>
-          <div class="valor-actual" id="dirESP">--</div>
-        </div>
-      </div>
-    </div>
+  <!-- Sección de Brújulas -->
+<div class="grafico-container">
+  <h2>🌍 Dirección del viento (API)</h2>
+  <canvas id="brujulaApi" width="200" height="200"></canvas>
+  <div class="valor-actual" id="valorApiDir">--</div>
+</div>
+
+<div class="grafico-container">
+  <h2>📡 Dirección del viento (Estación)</h2>
+  <canvas id="brujulaEstacion" width="200" height="200"></canvas>
+  <div class="valor-actual" id="valorEstacionDir">--</div>
+</div>
   </main>
 
   <script>
@@ -282,6 +275,71 @@
     cargarTodo();
     setInterval(cargarTodo, autoRefreshMs);
   </script>
+  <script>
+  // Variables para las brújulas
+  let ctxApi = document.getElementById('brujulaApi').getContext('2d');
+  let ctxEstacion = document.getElementById('brujulaEstacion').getContext('2d');
+
+  function dibujarBrujula(ctx, angulo, color, texto) {
+    ctx.clearRect(0, 0, 200, 200);
+    ctx.beginPath();
+    ctx.arc(100, 100, 90, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#00bcd4";
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // Norte
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "#333";
+    ctx.fillText("N", 95, 20);
+    ctx.fillText("S", 95, 190);
+    ctx.fillText("E", 180, 105);
+    ctx.fillText("O", 15, 105);
+
+    // Aguja
+    ctx.save();
+    ctx.translate(100, 100);
+    ctx.rotate((angulo * Math.PI) / 180);
+    ctx.beginPath();
+    ctx.moveTo(0, -60);
+    ctx.lineTo(0, 10);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    ctx.restore();
+
+    // Texto
+    ctx.fillStyle = "#333";
+    ctx.font = "16px Arial";
+    ctx.fillText(texto, 70, 110);
+  }
+
+  // Simulación inicial
+  let anguloApi = 0;
+  let anguloEst = 0;
+
+  function actualizarBrujulas() {
+    dibujarBrujula(ctxApi, anguloApi, "blue", anguloApi + "°");
+    dibujarBrujula(ctxEstacion, anguloEst, "green", anguloEst + "°");
+  }
+
+  setInterval(() => {
+    actualizarBrujulas();
+  }, 1000);
+
+  // 🔥 Aquí conectamos los datos reales
+  function actualizarConDatos(apiDir, estacionDir) {
+    anguloApi = apiDir;
+    anguloEst = estacionDir;
+    document.getElementById('valorApiDir').innerText = apiDir + "°";
+    document.getElementById('valorEstacionDir').innerText = estacionDir + "°";
+    actualizarBrujulas();
+  }
+
+  // Ejemplo: actualizamos con valores ficticios
+  actualizarConDatos(120, 250);
+</script>
 </body>
 </html>
+
 
