@@ -69,6 +69,14 @@
       .grafico-container{padding:1rem}
       canvas{max-height:300px}
     }
+    .grafico-container canvas {
+  margin-bottom: 10px;
+}
+
+.valor-actual {
+  font-size: 1rem;
+  font-weight: normal;
+}
   </style>
 </head>
 <body>
@@ -109,17 +117,25 @@
       <canvas id="cAlt"></canvas>
     </div>
 
-  <!-- Sección de Brújulas -->
-<div class="grafico-container">
-  <h2>🌍 Dirección del viento (API)</h2>
-  <canvas id="brujulaApi" width="200" height="200"></canvas>
-  <div class="valor-actual" id="valorApiDir">--</div>
-</div>
+  <div class="grafico-container">
+  <h2>🌬️ Dirección y Velocidad del Viento</h2>
+  <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+    
+    <!-- Brújula API -->
+    <div style="text-align: center;">
+      <canvas id="brujulaApi" width="150" height="150"></canvas>
+      <div class="valor-actual" id="valorApiDir">--</div>
+      <div class="valor-actual" id="valorApiVel">Velocidad: -- km/h</div>
+    </div>
 
-<div class="grafico-container">
-  <h2>📡 Dirección del viento (Estación)</h2>
-  <canvas id="brujulaEstacion" width="200" height="200"></canvas>
-  <div class="valor-actual" id="valorEstacionDir">--</div>
+    <!-- Brújula Estación -->
+    <div style="text-align: center;">
+      <canvas id="brujulaEstacion" width="150" height="150"></canvas>
+      <div class="valor-actual" id="valorEstacionDir">--</div>
+      <div class="valor-actual" id="valorEstacionVel">Velocidad: -- km/h</div>
+    </div>
+
+  </div>
 </div>
   </main>
 
@@ -276,70 +292,63 @@
     setInterval(cargarTodo, autoRefreshMs);
   </script>
   <script>
-  // Variables para las brújulas
   let ctxApi = document.getElementById('brujulaApi').getContext('2d');
-  let ctxEstacion = document.getElementById('brujulaEstacion').getContext('2d');
+  let ctxEst = document.getElementById('brujulaEstacion').getContext('2d');
 
-  function dibujarBrujula(ctx, angulo, color, texto) {
-    ctx.clearRect(0, 0, 200, 200);
+  // Función para convertir grados en punto cardinal
+  function gradosACardinal(grados) {
+    const direcciones = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
+    let idx = Math.round(grados / 22.5) % 16;
+    return direcciones[idx];
+  }
+
+  function dibujarBrujula(ctx, angulo, color) {
+    ctx.clearRect(0, 0, 150, 150);
     ctx.beginPath();
-    ctx.arc(100, 100, 90, 0, 2 * Math.PI);
+    ctx.arc(75, 75, 70, 0, 2 * Math.PI);
     ctx.strokeStyle = "#00bcd4";
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 4;
     ctx.stroke();
 
-    // Norte
-    ctx.font = "14px Arial";
+    // Marcas cardinales
+    ctx.font = "12px Arial";
     ctx.fillStyle = "#333";
-    ctx.fillText("N", 95, 20);
-    ctx.fillText("S", 95, 190);
-    ctx.fillText("E", 180, 105);
-    ctx.fillText("O", 15, 105);
+    ctx.fillText("N", 70, 15);
+    ctx.fillText("S", 70, 145);
+    ctx.fillText("E", 135, 80);
+    ctx.fillText("O", 10, 80);
 
     // Aguja
     ctx.save();
-    ctx.translate(100, 100);
+    ctx.translate(75, 75);
     ctx.rotate((angulo * Math.PI) / 180);
     ctx.beginPath();
-    ctx.moveTo(0, -60);
+    ctx.moveTo(0, -50);
     ctx.lineTo(0, 10);
     ctx.strokeStyle = color;
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 4;
     ctx.stroke();
     ctx.restore();
-
-    // Texto
-    ctx.fillStyle = "#333";
-    ctx.font = "16px Arial";
-    ctx.fillText(texto, 70, 110);
   }
 
-  // Simulación inicial
-  let anguloApi = 0;
-  let anguloEst = 0;
+  function actualizarBrujulas(apiDir, apiVel, estDir, estVel) {
+    dibujarBrujula(ctxApi, apiDir, "blue");
+    dibujarBrujula(ctxEst, estDir, "green");
 
-  function actualizarBrujulas() {
-    dibujarBrujula(ctxApi, anguloApi, "blue", anguloApi + "°");
-    dibujarBrujula(ctxEstacion, anguloEst, "green", anguloEst + "°");
+    document.getElementById('valorApiDir').innerText = gradosACardinal(apiDir);
+    document.getElementById('valorEstacionDir').innerText = gradosACardinal(estDir);
+
+    document.getElementById('valorApiVel').innerText = "Velocidad: " + apiVel.toFixed(1) + " km/h";
+    document.getElementById('valorEstacionVel').innerText = "Velocidad: " + estVel.toFixed(1) + " km/h";
   }
 
-  setInterval(() => {
-    actualizarBrujulas();
-  }, 1000);
+  // Valores iniciales simulados
+  actualizarBrujulas(120, 12.5, 250, 8.2);
 
-  // 🔥 Aquí conectamos los datos reales
-  function actualizarConDatos(apiDir, estacionDir) {
-    anguloApi = apiDir;
-    anguloEst = estacionDir;
-    document.getElementById('valorApiDir').innerText = apiDir + "°";
-    document.getElementById('valorEstacionDir').innerText = estacionDir + "°";
-    actualizarBrujulas();
-  }
 
-  // Ejemplo: actualizamos con valores ficticios
-  actualizarConDatos(120, 250);
 </script>
 </body>
 </html>
+
 
 
