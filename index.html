@@ -124,9 +124,13 @@
       <canvas id="brujulaAPI" width="150" height="150"></canvas>
       <div id="infoAPI" style="margin-top:10px; font-weight:bold;"></div>
     </div>
-    
+    <div class="grafico-container">
+  <h2>🌧️ Lluvia acumulada (mm)</h2>
+  <div class="valor-actual" id="valorLluvia">--</div>
+  <canvas id="graficoLluvia"></canvas>
   </div>
 </div>
+  
 </main>
 
 <script>
@@ -247,6 +251,33 @@
       }
     }
   });
+  // === GRAFICO DE LLUVIA ===
+const ctxLluvia = document.getElementById('graficoLluvia').getContext('2d');
+const graficoLluvia = new Chart(ctxLluvia, {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Lluvia (mm)',
+      data: [],
+      backgroundColor: 'rgba(0, 188, 212, 0.4)',
+      borderColor: '#00bcd4',
+      borderWidth: 2,
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: 'Milímetros' } },
+      x: { title: { display: true, text: 'Hora' } }
+    },
+    plugins: {
+      legend: { display: false }
+    }
+  }
+});
+
 
   // Funciones auxiliares para brújulas y actualización de datos
   function gradosACardinal(grados) {
@@ -306,6 +337,19 @@ let velEstacion = parseFloat(dataTS.feeds[dataTS.feeds.length - 1].field6 || 0);
 const ctxEst = document.getElementById('brujulaEstacion').getContext('2d');
 dibujarBrujula(ctxEst, dirEstacion, gradosACardinal(dirEstacion), velEstacion);
 document.getElementById('infoEstacion').innerText = `${gradosACardinal(dirEstacion)} - ${velEstacion.toFixed(1)} m/s`;
+    // --- LLUVIA ---
+const datosLluvia = dataTS.feeds.map(f => parseFloat(f.field7));
+const tiemposLluvia = dataTS.feeds.map(f => {
+  const t = new Date(f.created_at);
+  return t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+});
+graficoLluvia.data.labels = tiemposLluvia;
+graficoLluvia.data.datasets[0].data = datosLluvia;
+graficoLluvia.update();
+
+const valorActualLluvia = datosLluvia[datosLluvia.length - 1];
+document.getElementById('valorLluvia').innerText = valorActualLluvia.toFixed(2) + " mm";
+
 
   }
   // --- FUNCIONES PARA BRÚJULAS ---
@@ -352,6 +396,7 @@ function dibujarBrujula(ctx, angulo, texto, velocidad) {
 
 </body>
 </html>
+
 
 
 
